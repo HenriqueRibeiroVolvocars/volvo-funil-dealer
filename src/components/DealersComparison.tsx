@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowUpDown, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowUpDown, ArrowUp, ArrowDown, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { DealerComparisonData, DealerMetrics } from '@/utils/dealerMetrics';
 
 interface DealersComparisonProps {
@@ -14,6 +15,15 @@ type SortDirection = 'asc' | 'desc';
 export default function DealersComparison({ data }: DealersComparisonProps) {
   const [sortField, setSortField] = useState<SortField>('leads');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+  const sortOptions = [
+    { value: 'dealerName', label: 'Nome (A-Z)' },
+    { value: 'leads', label: 'Quantidade de Leads' },
+    { value: 'testDrives', label: 'Quantidade de Test Drives' },
+    { value: 'sales', label: 'Quantidade de Vendas' },
+    { value: 'leadsToTestDriveRate', label: 'Taxa Lead → TD' },
+    { value: 'testDriveToSalesRate', label: 'Taxa TD → Venda' },
+  ] as const;
 
   const formatNumber = (value: number): string => {
     return new Intl.NumberFormat('pt-BR').format(value);
@@ -36,13 +46,14 @@ export default function DealersComparison({ data }: DealersComparisonProps) {
     }
   };
 
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('desc');
-    }
+  const handleSortFieldChange = (field: string) => {
+    setSortField(field as SortField);
+    // Para nome, default é ascendente; para outros, descendente
+    setSortDirection(field === 'dealerName' ? 'asc' : 'desc');
+  };
+
+  const toggleSortDirection = () => {
+    setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
   };
 
   const sortedDealers = [...data.dealerMetrics].sort((a, b) => {
@@ -55,19 +66,8 @@ export default function DealersComparison({ data }: DealersComparisonProps) {
     return multiplier * (a[sortField] - b[sortField]);
   });
 
-  const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={() => handleSort(field)}
-      className="h-auto p-1 font-medium text-xs hover:bg-accent/50"
-    >
-      <div className="flex items-center gap-1">
-        {children}
-        <ArrowUpDown className="w-3 h-3" />
-      </div>
-    </Button>
-  );
+  const currentSortLabel = sortOptions.find(option => option.value === sortField)?.label || 'Quantidade de Leads';
+
 
   const AbsoluteValueCell = ({ 
     dealerValue, 
@@ -117,35 +117,79 @@ export default function DealersComparison({ data }: DealersComparisonProps) {
     <section>
       <Card className="funnel-card">
         <div className="mb-6">
-          <h2 className="text-xl font-bold text-foreground mb-2">
-            Comparativo por Concessionária
-          </h2>
-          <p className="text-muted-foreground text-sm">
-            Performance de cada dealer com participação no total BR e comparação nas taxas de conversão
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            <div>
+              <h2 className="text-xl font-bold text-foreground mb-2">
+                Comparativo por Concessionária
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                Performance de cada dealer com participação no total BR e comparação nas taxas de conversão
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-muted-foreground font-medium">Ordenar por:</label>
+                <Select value={sortField} onValueChange={handleSortFieldChange}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Selecione o critério" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sortOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-muted-foreground font-medium">Ordem:</label>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleSortDirection}
+                  className="gap-2 w-24"
+                >
+                  {sortDirection === 'asc' ? (
+                    <>
+                      <ArrowUp className="w-3 h-3" />
+                      {sortField === 'dealerName' ? 'A-Z' : 'Menor'}
+                    </>
+                  ) : (
+                    <>
+                      <ArrowDown className="w-3 h-3" />
+                      {sortField === 'dealerName' ? 'Z-A' : 'Maior'}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
         
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left py-3 px-2">
-                  <SortButton field="dealerName">Concessionária</SortButton>
+                <th className="text-left py-3 px-2 font-medium text-foreground">
+                  Concessionária
                 </th>
-                <th className="text-right py-3 px-2">
-                  <SortButton field="leads">Leads</SortButton>
+                <th className="text-right py-3 px-2 font-medium text-foreground">
+                  Leads
                 </th>
-                <th className="text-right py-3 px-2">
-                  <SortButton field="testDrives">Test Drives</SortButton>
+                <th className="text-right py-3 px-2 font-medium text-foreground">
+                  Test Drives
                 </th>
-                <th className="text-right py-3 px-2">
-                  <SortButton field="sales">Vendas</SortButton>
+                <th className="text-right py-3 px-2 font-medium text-foreground">
+                  Vendas
                 </th>
-                <th className="text-right py-3 px-2">
-                  <SortButton field="leadsToTestDriveRate">Taxa Lead→TD</SortButton>
+                <th className="text-right py-3 px-2 font-medium text-foreground">
+                  Taxa Lead→TD
                 </th>
-                <th className="text-right py-3 px-2">
-                  <SortButton field="testDriveToSalesRate">Taxa TD→Venda</SortButton>
+                <th className="text-right py-3 px-2 font-medium text-foreground">
+                  Taxa TD→Venda
                 </th>
               </tr>
               
