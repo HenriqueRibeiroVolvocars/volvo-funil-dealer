@@ -50,12 +50,22 @@ function enrichSheet3WithDealerInfo(sheet3Data: any[], sheet1Data: any[]): any[]
 }
 
 // Função para filtrar uma aba específica
-function filterSheetData(data: any[], filters: FilterOptions, sheet1Data?: any[]): any[] {
-  return data.filter(row => {
+function filterSheetData(data: any[], filters: FilterOptions, sheet1Data?: any[], sheetName: string = 'unknown'): any[] {
+  console.log(`🔍 Filtrando ${sheetName}:`, {
+    totalRows: data.length,
+    hasFilters: filters.selectedDealers.length > 0 || filters.dateRange.start || filters.dateRange.end,
+    selectedDealers: filters.selectedDealers,
+    dateRange: filters.dateRange
+  });
+  
+  const filteredData = data.filter(row => {
     let rowToCheck = row;
     
-    // Se for Sheet3, precisamos correlacionar com Sheet1 para pegar dealer e data
-    if (sheet1Data && !getValue(row, ['Dealer', 'dealer'])) {
+    // Se for Sheet2 ou Sheet3, pode precisar correlacionar com Sheet1 para pegar dealer e data
+    const needsCorrelation = !getValue(row, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']) 
+                          || !getValue(row, ['dateSales', 'DateSales', 'Data', 'data']);
+    
+    if (sheet1Data && needsCorrelation) {
       const id = getValue(row, ['ID', 'id', 'Id']);
       if (id) {
         const matchingSheet1Row = sheet1Data.find(s1Row => {
@@ -64,11 +74,18 @@ function filterSheetData(data: any[], filters: FilterOptions, sheet1Data?: any[]
         });
         
         if (matchingSheet1Row) {
+          const correlatedDealer = getValue(matchingSheet1Row, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
+          const correlatedDate = getValue(matchingSheet1Row, ['dateSales', 'DateSales', 'Data', 'data']);
+          
           rowToCheck = {
             ...row,
-            Dealer: getValue(matchingSheet1Row, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']),
-            dateSales: getValue(matchingSheet1Row, ['dateSales', 'DateSales', 'Data', 'data'])
+            Dealer: correlatedDealer,
+            dateSales: correlatedDate
           };
+          
+          console.log(`🔗 Correlação ${sheetName} - ID: ${id}, Dealer: ${correlatedDealer}, Date: ${correlatedDate}`);
+        } else {
+          console.log(`❌ ${sheetName} - ID ${id} não encontrado na Sheet1`);
         }
       }
     }
@@ -77,6 +94,7 @@ function filterSheetData(data: any[], filters: FilterOptions, sheet1Data?: any[]
     if (filters.selectedDealers.length > 0) {
       const dealer = getValue(rowToCheck, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
       if (!dealer || !filters.selectedDealers.includes(dealer.trim())) {
+        console.log(`🚫 ${sheetName} - Linha rejeitada por dealer: ${dealer} não está em ${filters.selectedDealers}`);
         return false;
       }
     }
@@ -96,9 +114,11 @@ function filterSheetData(data: any[], filters: FilterOptions, sheet1Data?: any[]
         
         if (date && !isNaN(date.getTime())) {
           if (filters.dateRange.start && date < filters.dateRange.start) {
+            console.log(`🚫 ${sheetName} - Linha rejeitada por data inicial: ${date} < ${filters.dateRange.start}`);
             return false;
           }
           if (filters.dateRange.end && date > filters.dateRange.end) {
+            console.log(`🚫 ${sheetName} - Linha rejeitada por data final: ${date} > ${filters.dateRange.end}`);
             return false;
           }
         }
@@ -107,6 +127,9 @@ function filterSheetData(data: any[], filters: FilterOptions, sheet1Data?: any[]
 
     return true;
   });
+  
+  console.log(`✅ ${sheetName} filtrado: ${filteredData.length} de ${data.length} linhas mantidas`);
+  return filteredData;
 }
 
 // Recalcular as métricas com base nos dados filtrados
@@ -121,6 +144,12 @@ function calculateFilteredMetrics(
   const totalTestDrives = filteredSheet2.length;
   const totalJornadaCompleta = filteredSheet3.length;
   const totalFaturamentos = filteredSheet4.length;
+
+  console.info('📊 Métricas filtradas calculadas:');
+  console.info(`  - Sheet1 filtrada (Leads): ${totalLeads} linhas`);
+  console.info(`  - Sheet2 filtrada (Test Drives): ${totalTestDrives} linhas`);
+  console.info(`  - Sheet3 filtrada (Jornada Completa): ${totalJornadaCompleta} linhas`);
+  console.info(`  - Sheet4 filtrada (Faturamentos): ${totalFaturamentos} linhas`);
 
   // Análise Sheet1 - Leads
   const leadsWithTestDrive = filteredSheet1.filter(row => {
@@ -262,11 +291,11 @@ export function applyFilters(originalData: ProcessedData, filters: FilterOptions
     return originalData;
   }
 
-  // Filtrar cada aba (Sheet3 precisa de correlação com Sheet1)
-  const filteredSheet1 = filterSheetData(originalData.rawData.sheet1Data, filters);
-  const filteredSheet2 = filterSheetData(originalData.rawData.sheet2Data, filters);
-  const filteredSheet3 = filterSheetData(originalData.rawData.sheet3Data, filters, originalData.rawData.sheet1Data);
-  const filteredSheet4 = filterSheetData(originalData.rawData.sheet4Data, filters);
+  // Filtrar cada aba (Sheet2 e Sheet3 podem precisar de correlação com Sheet1)
+  const filteredSheet1 = filterSheetData(originalData.rawData.sheet1Data, filters, undefined, 'Sheet1');
+  const filteredSheet2 = filterSheetData(originalData.rawData.sheet2Data, filters, originalData.rawData.sheet1Data, 'Sheet2');
+  const filteredSheet3 = filterSheetData(originalData.rawData.sheet3Data, filters, originalData.rawData.sheet1Data, 'Sheet3');
+  const filteredSheet4 = filterSheetData(originalData.rawData.sheet4Data, filters, undefined, 'Sheet4');
 
   // Recalcular métricas
   const newMetrics = calculateFilteredMetrics(filteredSheet1, filteredSheet2, filteredSheet3, filteredSheet4);

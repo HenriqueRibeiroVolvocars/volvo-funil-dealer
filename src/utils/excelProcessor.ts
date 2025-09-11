@@ -221,15 +221,57 @@ export async function processExcelFile(file: File): Promise<ProcessedData> {
 function extractDealers(sheet1Data: any[], sheet2Data: any[], sheet3Data: any[], sheet4Data: any[]): string[] {
   const dealerSet = new Set<string>();
   
-  // Extrair dealers de todas as abas
-  [...sheet1Data, ...sheet2Data, ...sheet3Data, ...sheet4Data].forEach(row => {
+  console.info('🏢 Extraindo dealers de cada sheet:');
+  
+  // Extrair dealers da Sheet1
+  let sheet1Dealers = 0;
+  sheet1Data.forEach(row => {
     const dealer = getValue(row, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
     if (dealer && typeof dealer === 'string' && dealer.trim()) {
       dealerSet.add(dealer.trim());
+      sheet1Dealers++;
     }
   });
+  console.info(`  - Sheet1: ${sheet1Dealers} linhas com dealer`);
   
-  return Array.from(dealerSet).sort();
+  // Extrair dealers da Sheet2
+  let sheet2Dealers = 0;
+  sheet2Data.forEach(row => {
+    const dealer = getValue(row, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
+    if (dealer && typeof dealer === 'string' && dealer.trim()) {
+      dealerSet.add(dealer.trim());
+      sheet2Dealers++;
+    }
+  });
+  console.info(`  - Sheet2: ${sheet2Dealers} linhas com dealer`);
+  
+  // Extrair dealers da Sheet3
+  let sheet3Dealers = 0;
+  sheet3Data.forEach(row => {
+    const dealer = getValue(row, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
+    if (dealer && typeof dealer === 'string' && dealer.trim()) {
+      dealerSet.add(dealer.trim());
+      sheet3Dealers++;
+    }
+  });
+  console.info(`  - Sheet3: ${sheet3Dealers} linhas com dealer`);
+  
+  // Extrair dealers da Sheet4
+  let sheet4Dealers = 0;
+  sheet4Data.forEach(row => {
+    const dealer = getValue(row, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
+    if (dealer && typeof dealer === 'string' && dealer.trim()) {
+      dealerSet.add(dealer.trim());
+      sheet4Dealers++;
+    }
+  });
+  console.info(`  - Sheet4: ${sheet4Dealers} linhas com dealer`);
+  
+  const dealers = Array.from(dealerSet).sort();
+  console.info(`🏢 Total de dealers únicos encontrados: ${dealers.length}`);
+  console.info(`🏢 Lista de dealers:`, dealers);
+  
+  return dealers;
 }
 
 function calculateMetrics(sheet1Data: any[], sheet2Data: any[], sheet3Data: any[], sheet4Data: any[] = []): Omit<ProcessedData, 'period' | 'rawData' | 'dealers'> {
@@ -239,8 +281,12 @@ function calculateMetrics(sheet1Data: any[], sheet2Data: any[], sheet3Data: any[
   const totalTestDrives = sheet2Data.length;
   const totalJornadaCompleta = sheet3Data.length;
   const totalFaturamentos = sheet4Data.length;
-  console.info(`  - Sheet3 (Jornada Completa): ${totalJornadaCompleta}`);
-  console.info(`  - Sheet4 (Faturamentos): ${totalFaturamentos}`);
+  
+  console.info('📊 Métricas calculadas:');
+  console.info(`  - Sheet1 (Leads): ${totalLeads} linhas`);
+  console.info(`  - Sheet2 (Test Drives): ${totalTestDrives} linhas`);
+  console.info(`  - Sheet3 (Jornada Completa): ${totalJornadaCompleta} linhas`);
+  console.info(`  - Sheet4 (Faturamentos): ${totalFaturamentos} linhas`);
 
   // Análise Sheet1 - Leads
   const leadsWithTestDrive = sheet1Data.filter(row => {
