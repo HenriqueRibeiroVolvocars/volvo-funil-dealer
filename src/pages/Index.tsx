@@ -8,7 +8,9 @@ import FilterBar from '@/components/FilterBar';
 import { processExcelFile, ProcessedData } from '@/utils/excelProcessor';
 import { applyFilters, FilterOptions } from '@/utils/dataFilters';
 import { useToast } from '@/hooks/use-toast';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Download } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { exportToPDF } from '@/utils/pdfExporter';
 
 export default function Index() {
   const [originalData, setOriginalData] = useState<ProcessedData | null>(null);
@@ -19,6 +21,22 @@ export default function Index() {
     selectedDealers: []
   });
   const { toast } = useToast();
+
+  const handleExportPDF = async () => {
+    try {
+      await exportToPDF('dashboard-content');
+      toast({
+        title: "PDF exportado com sucesso!",
+        description: "O arquivo foi baixado para sua pasta de downloads."
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao exportar PDF",
+        description: error instanceof Error ? error.message : "Tente novamente",
+        variant: "destructive"
+      });
+    }
+  };
 
   // Aplicar filtros aos dados originais
   const data = useMemo(() => {
@@ -59,6 +77,7 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background">
+      <div id="dashboard-content">
       {/* Header */}
       <header className="bg-card border-b border-border">
         <div className="max-w-6xl mx-auto px-6 py-8">
@@ -73,12 +92,23 @@ export default function Index() {
         </div>
       </header>
 
-      {/* Período de Análise - Canto superior direito */}
+      {/* Período de Análise e Botão Exportar PDF - Canto superior direito */}
       {data?.period.start && data?.period.end && (
-        <div className="fixed top-4 right-4 z-20 bg-background/90 backdrop-blur-sm border border-border/50 rounded-lg px-3 py-2 shadow-sm">
-          <p className="text-xs text-muted-foreground font-medium">
-            Período: {data.period.start.toLocaleDateString('pt-BR')} a {data.period.end.toLocaleDateString('pt-BR')}
-          </p>
+        <div className="fixed top-4 right-4 z-20 space-y-2">
+          <div className="bg-background/90 backdrop-blur-sm border border-border/50 rounded-lg px-3 py-2 shadow-sm">
+            <p className="text-xs text-muted-foreground font-medium">
+              Período: {data.period.start.toLocaleDateString('pt-BR')} a {data.period.end.toLocaleDateString('pt-BR')}
+            </p>
+          </div>
+          <Button
+            onClick={handleExportPDF}
+            variant="outline"
+            size="sm"
+            className="w-full gap-2 bg-background/90 backdrop-blur-sm"
+          >
+            <Download className="w-4 h-4" />
+            Exportar PDF
+          </Button>
         </div>
       )}
 
@@ -211,6 +241,7 @@ export default function Index() {
           )}
         </div>
       </main>
+      </div>
     </div>
   );
 }
