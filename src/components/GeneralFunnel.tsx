@@ -28,21 +28,13 @@ export default function GeneralFunnel({ data, originalData, hasFiltersApplied = 
         {/* Total de Leads */}
         <div className="relative flex justify-center">
           <div 
-            className="funnel-bar h-20 relative"
+            className="funnel-bar h-20"
             style={{ 
               backgroundColor: 'hsl(var(--funnel-bar-primary))',
               width: '100%',
               clipPath: 'polygon(3% 0, 97% 0, 94% 100%, 6% 100%)'
             }}
           >
-            {/* Referência BR */}
-            {hasFiltersApplied && originalData && (
-              <div className="absolute top-2 right-6 text-xs text-black/60 bg-white/20 px-2 py-1 rounded text-center min-w-[50px] z-10">
-                <div className="font-medium">BR</div>
-                <div className="font-mono">{formatNumber(originalData.totalLeads)}</div>
-              </div>
-            )}
-            
             <div className="flex items-center justify-between w-full" style={{ padding: '0 12%' }}>
               <div className="flex items-center">
                 <Users className="w-5 h-5 mr-3" />
@@ -86,21 +78,13 @@ export default function GeneralFunnel({ data, originalData, hasFiltersApplied = 
         {/* Total de Test Drives */}
         <div className="relative flex justify-center">
           <div 
-            className="funnel-bar h-20 relative"
+            className="funnel-bar h-20"
             style={{ 
               backgroundColor: 'hsl(var(--funnel-bar-secondary))',
               width: '80%',
               clipPath: 'polygon(8% 0, 92% 0, 87% 100%, 13% 100%)'
             }}
           >
-            {/* Referência BR */}
-            {hasFiltersApplied && originalData && (
-              <div className="absolute top-2 right-6 text-xs text-black/60 bg-white/20 px-2 py-1 rounded text-center min-w-[50px] z-10">
-                <div className="font-medium">BR</div>
-                <div className="font-mono">{formatNumber(originalData.totalTestDrives)}</div>
-              </div>
-            )}
-            
             <div className="flex items-center justify-between w-full" style={{ padding: '0 18%' }}>
               <div className="flex items-center">
                 <Car className="w-5 h-5 mr-3" />
@@ -119,21 +103,13 @@ export default function GeneralFunnel({ data, originalData, hasFiltersApplied = 
         {/* Total de Vendas */}
         <div className="relative flex justify-center">
           <div 
-            className="funnel-bar h-20 relative"
+            className="funnel-bar h-20"
             style={{ 
               backgroundColor: 'hsl(var(--funnel-bar-tertiary))',
               width: '70%',
               clipPath: 'polygon(12% 0, 88% 0, 82% 100%, 18% 100%)'
             }}
           >
-            {/* Referência BR */}
-            {hasFiltersApplied && originalData && (
-              <div className="absolute top-2 right-6 text-xs text-black/60 bg-white/20 px-2 py-1 rounded text-center min-w-[50px] z-10">
-                <div className="font-medium">BR</div>
-                <div className="font-mono">{formatNumber(originalData.totalSales)}</div>
-              </div>
-            )}
-            
             <div className="flex items-center justify-between w-full" style={{ padding: '0 22%' }}>
               <div className="flex items-center">
                 <DollarSign className="w-5 h-5 mr-3" />
