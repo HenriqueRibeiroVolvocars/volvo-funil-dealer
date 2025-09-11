@@ -1,5 +1,5 @@
 import { ProcessedData, FunnelMetrics } from './excelProcessor';
-import { FilterOptions } from './dataFilters';
+import { FilterOptions, applyFilters } from './dataFilters';
 
 export interface DealerMetrics {
   dealerName: string;
@@ -61,65 +61,15 @@ function getDealerFromRow(row: any, sheetName: string, sheet1Data?: any[]): stri
   return dealer ? String(dealer).trim() : null;
 }
 
-// Função para filtrar dados por período apenas (sem filtro de dealer)
-function filterByDateOnly(data: any[], filters: FilterOptions, sheetName: string): any[] {
-  if (!filters.dateRange.start && !filters.dateRange.end) {
-    return data;
-  }
-  
-  return data.filter(row => {
-    let dateValue = getValue(row, ['dateSales', 'DateSales', 'Data', 'data']);
-    
-    // Para Sheet2, a data pode estar na coluna E (índice 4)
-    if (!dateValue && sheetName === 'Sheet2') {
-      const keys = Object.keys(row);
-      if (keys[4]) dateValue = row[keys[4]]; // Coluna E
-    }
-    
-    // Para Sheet4, a data pode estar na coluna D (índice 3)  
-    if (!dateValue && sheetName === 'Sheet4') {
-      const keys = Object.keys(row);
-      if (keys[3]) dateValue = row[keys[3]]; // Coluna D
-    }
-    
-    if (dateValue) {
-      let date: Date | null = null;
-      
-      if (typeof dateValue === 'string') {
-        date = new Date(dateValue);
-      } else if (typeof dateValue === 'number') {
-        // Se for número serial do Excel
-        date = new Date((dateValue - 25569) * 86400 * 1000);
-      }
-      
-      if (date && !isNaN(date.getTime())) {
-        if (filters.dateRange.start && date < filters.dateRange.start) {
-          return false;
-        }
-        if (filters.dateRange.end && date > filters.dateRange.end) {
-          return false;
-        }
-      }
-    }
-    
-    return true;
-  });
-}
-
 export function calculateDealerComparison(
   originalData: ProcessedData, 
   filters: FilterOptions
 ): DealerComparisonData {
-  // Filtrar dados apenas por período, mantendo todos os dealers
-  const dateFilters: FilterOptions = {
+  // Usar a mesma função de filtro que applyFilters usa para garantir consistência
+  const filteredData = applyFilters(originalData, {
     dateRange: filters.dateRange,
-    selectedDealers: [] // Não aplicar filtro de dealer
-  };
-  
-  const filteredSheet1 = filterByDateOnly(originalData.rawData.sheet1Data, dateFilters, 'Sheet1');
-  const filteredSheet2 = filterByDateOnly(originalData.rawData.sheet2Data, dateFilters, 'Sheet2');
-  const filteredSheet3 = filterByDateOnly(originalData.rawData.sheet3Data, dateFilters, 'Sheet3');
-  const filteredSheet4 = filterByDateOnly(originalData.rawData.sheet4Data, dateFilters, 'Sheet4');
+    selectedDealers: [] // Não aplicar filtro de dealer para manter todos
+  });
   
   // Mapear dados por dealer
   const dealerDataMap = new Map<string, {
@@ -131,7 +81,7 @@ export function calculateDealerComparison(
   }>();
   
   // Processar Sheet1 (Leads)
-  filteredSheet1.forEach(row => {
+  filteredData.rawData.sheet1Data.forEach(row => {
     const dealer = getDealerFromRow(row, 'Sheet1');
     if (dealer) {
       if (!dealerDataMap.has(dealer)) {
@@ -162,8 +112,8 @@ export function calculateDealerComparison(
   });
   
   // Processar Sheet2 (Test Drives)
-  filteredSheet2.forEach(row => {
-    const dealer = getDealerFromRow(row, 'Sheet2', filteredSheet1);
+  filteredData.rawData.sheet2Data.forEach(row => {
+    const dealer = getDealerFromRow(row, 'Sheet2', filteredData.rawData.sheet1Data);
     if (dealer) {
       if (!dealerDataMap.has(dealer)) {
         dealerDataMap.set(dealer, {
@@ -187,7 +137,7 @@ export function calculateDealerComparison(
   });
   
   // Processar Sheet4 (Vendas diretas)
-  filteredSheet4.forEach(row => {
+  filteredData.rawData.sheet4Data.forEach(row => {
     const dealer = getDealerFromRow(row, 'Sheet4');
     if (dealer) {
       if (!dealerDataMap.has(dealer)) {
