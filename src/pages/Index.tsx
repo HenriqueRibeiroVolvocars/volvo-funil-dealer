@@ -4,9 +4,11 @@ import KpiCards from '@/components/KpiCards';
 import SalesFunnel from '@/components/SalesFunnel';
 import MultipleFunnels from '@/components/MultipleFunnels';
 import GeneralFunnel from '@/components/GeneralFunnel';
+import DealersComparison from '@/components/DealersComparison';
 import FilterBar from '@/components/FilterBar';
 import { processExcelFile, ProcessedData } from '@/utils/excelProcessor';
 import { applyFilters, FilterOptions } from '@/utils/dataFilters';
+import { calculateDealerComparison } from '@/utils/dealerMetrics';
 import { useToast } from '@/hooks/use-toast';
 import { AlertCircle, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -42,6 +44,12 @@ export default function Index() {
   const data = useMemo(() => {
     if (!originalData) return null;
     return applyFilters(originalData, filters);
+  }, [originalData, filters]);
+
+  // Calcular dados de comparação de dealers (apenas quando não há filtros de dealer)
+  const dealerComparison = useMemo(() => {
+    if (!originalData || filters.selectedDealers.length > 0) return null;
+    return calculateDealerComparison(originalData, filters);
   }, [originalData, filters]);
 
   const handleFileUpload = async (file: File) => {
@@ -212,6 +220,11 @@ export default function Index() {
                   }
                 />
               </section>
+
+              {/* Dealers Comparison - Only show when no dealer filter is applied */}
+              {dealerComparison && (
+                <DealersComparison data={dealerComparison} />
+              )}
             </>
           )}
 
