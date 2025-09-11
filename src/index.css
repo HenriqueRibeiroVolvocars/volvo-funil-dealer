@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Volvo Design System - Cores corporativas e elementos visuais elegantes */
+
+@layer base {
+  :root {
+    /* Cores principais da Volvo */
+    --volvo-navy: 200 100% 17%; /* #003057 */
+    --volvo-navy-light: 200 45% 35%; /* #335F7F */
+    --volvo-navy-lighter: 200 30% 51%; /* #5F86A3 */
+    --volvo-gray: 220 8% 59%; /* #8A8F98 */
+    --volvo-gray-light: 220 12% 89%; /* #E6E8EB */
+    --volvo-accent: 220 14% 78%; /* #C7CCD4 */
+    --volvo-panel: 210 33% 97%; /* #F5F7F9 */
+    
+    /* Sistema de cores semânticas */
+    --background: 0 0% 100%;
+    --foreground: 200 100% 17%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 200 100% 17%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 200 100% 17%;
+
+    --primary: 200 100% 17%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 33% 97%;
+    --secondary-foreground: 200 100% 17%;
+
+    --muted: 220 12% 89%;
+    --muted-foreground: 220 8% 59%;
+
+    --accent: 220 14% 78%;
+    --accent-foreground: 200 100% 17%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 14% 78%;
+    --input: 220 12% 89%;
+    --ring: 200 100% 17%;
+
+    --radius: 1rem;
+    
+    /* Elementos específicos do funil */
+    --funnel-bar-primary: 200 100% 17%;
+    --funnel-bar-secondary: 200 45% 35%;
+    --funnel-bar-tertiary: 200 30% 51%;
+    --funnel-bar-success: 142 69% 58%;
+    --funnel-bar-info: 220 14% 65%;
+    
+    /* Sombras elegantes */
+    --shadow-subtle: 0 2px 12px -4px hsl(200 50% 50% / 0.08);
+    --shadow-card: 0 4px 20px -6px hsl(200 50% 50% / 0.12);
+    
+    /* Transições suaves */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Modo escuro mantém o mesmo estilo Volvo */
+    --background: 200 50% 5%;
+    --foreground: 0 0% 100%;
+    --card: 200 50% 8%;
+    --card-foreground: 0 0% 100%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 200 100% 17%;
+    --secondary: 200 30% 15%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 200 20% 20%;
+    --muted-foreground: 220 8% 70%;
+    --accent: 200 20% 25%;
+    --accent-foreground: 0 0% 100%;
+    --border: 200 20% 25%;
+    --input: 200 20% 25%;
+    --ring: 0 0% 100%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  
+  /* Utilitários para o funil comercial */
+  .funnel-card {
+    @apply bg-card border border-border rounded-2xl shadow-sm p-6;
+    box-shadow: var(--shadow-card);
+  }
+  
+  .funnel-kpi {
+    @apply bg-secondary/50 rounded-xl p-6 text-center;
+    border: 1px solid hsl(var(--accent));
+  }
+  
+  .funnel-bar {
+    @apply rounded-2xl flex items-center justify-center font-semibold text-white;
+    transition: var(--transition-smooth);
+  }
+  
+  .upload-zone {
+    @apply border-2 border-dashed border-accent rounded-2xl p-8 text-center;
+    transition: var(--transition-smooth);
+  }
+  
+  .upload-zone:hover {
+    @apply border-primary bg-secondary/30;
+  }
+}
