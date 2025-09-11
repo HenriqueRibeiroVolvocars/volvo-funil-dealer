@@ -1,5 +1,6 @@
 import { TrendingUp, Clock, Calendar, Target, Percent, Zap, BarChart3 } from 'lucide-react';
 import { formatBrazilianNumber, formatBrazilianPercent, FunnelMetrics } from '@/utils/excelProcessor';
+import { cn } from '@/lib/utils';
 
 interface KpiData {
   avgLeadToTestDrive: number | null;
@@ -60,7 +61,7 @@ export default function KpiCards({ data, originalData, hasFiltersApplied = false
             <div key={index} className="bg-card border rounded-lg p-6 hover:shadow-md transition-shadow h-full relative">
               {/* Referência Total no canto superior direito */}
               {hasFiltersApplied && originalData && (
-                <div className="absolute top-2 right-2 text-xs text-muted-foreground bg-secondary/50 px-2 py-1 rounded text-center min-w-[60px]">
+                <div className="absolute top-3 right-3 text-xs text-muted-foreground bg-secondary/50 px-2 py-1 rounded text-center min-w-[50px] z-10">
                   <div className="font-medium">BR</div>
                   <div className="font-mono">
                     {index === 0 && formatBrazilianNumber(originalData.avgLeadToFaturamento)}
@@ -71,7 +72,10 @@ export default function KpiCards({ data, originalData, hasFiltersApplied = false
                 </div>
               )}
               
-              <div className="flex items-start gap-3 mb-4">
+              <div className={cn(
+                "flex items-start gap-3 mb-4",
+                hasFiltersApplied && originalData && "pr-20"
+              )}>
                 <div className="p-2 rounded-lg bg-primary/10 flex-shrink-0">
                   <Icon className="w-5 h-5 text-primary" />
                 </div>
