@@ -234,13 +234,20 @@ function extractDealers(sheet1Data: any[], sheet2Data: any[], sheet3Data: any[],
   });
   console.info(`  - Sheet1: ${sheet1Dealers} linhas com dealer`);
   
-  // Extrair dealers da Sheet2
   let sheet2Dealers = 0;
   sheet2Data.forEach(row => {
-    const dealer = getValue(row, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
-    if (dealer && typeof dealer === 'string' && dealer.trim()) {
-      dealerSet.add(dealer.trim());
-      sheet2Dealers++;
+    let dealer: any = getValue(row, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
+    if (!dealer) {
+      const keys = Object.keys(row);
+      const fallbackKey = keys[3]; // Coluna D
+      if (fallbackKey) dealer = row[fallbackKey];
+    }
+    if (dealer !== undefined && dealer !== null) {
+      const dealerStr = String(dealer).trim();
+      if (dealerStr) {
+        dealerSet.add(dealerStr);
+        sheet2Dealers++;
+      }
     }
   });
   console.info(`  - Sheet2: ${sheet2Dealers} linhas com dealer`);
@@ -259,10 +266,18 @@ function extractDealers(sheet1Data: any[], sheet2Data: any[], sheet3Data: any[],
   // Extrair dealers da Sheet4
   let sheet4Dealers = 0;
   sheet4Data.forEach(row => {
-    const dealer = getValue(row, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
-    if (dealer && typeof dealer === 'string' && dealer.trim()) {
-      dealerSet.add(dealer.trim());
-      sheet4Dealers++;
+    let dealer: any = getValue(row, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
+    if (!dealer) {
+      const keys = Object.keys(row);
+      const fallbackKey = keys[5]; // Coluna F
+      if (fallbackKey) dealer = row[fallbackKey];
+    }
+    if (dealer !== undefined && dealer !== null) {
+      const dealerStr = String(dealer).trim();
+      if (dealerStr) {
+        dealerSet.add(dealerStr);
+        sheet4Dealers++;
+      }
     }
   });
   console.info(`  - Sheet4: ${sheet4Dealers} linhas com dealer`);
@@ -336,7 +351,7 @@ function calculateMetrics(sheet1Data: any[], sheet2Data: any[], sheet3Data: any[
     },
     testDrivesVendidos: {
       testDrives: totalTestDrives, // Corrigido: usar total da sheet2
-      vendas: testDrivesFaturados
+      vendas: totalFaturados
     },
     jornadaCompleta: {
       leads: totalLeads,

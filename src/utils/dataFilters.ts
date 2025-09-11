@@ -92,9 +92,15 @@ function filterSheetData(data: any[], filters: FilterOptions, sheet1Data?: any[]
 
     // Filtro de dealer
     if (filters.selectedDealers.length > 0) {
-      const dealer = getValue(rowToCheck, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
-      if (!dealer || !filters.selectedDealers.includes(dealer.trim())) {
-        console.log(`🚫 ${sheetName} - Linha rejeitada por dealer: ${dealer} não está em ${filters.selectedDealers}`);
+      let dealer: any = getValue(rowToCheck, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
+      if (!dealer) {
+        const keys = Object.keys(rowToCheck);
+        if (sheetName === 'Sheet2' && keys[3]) dealer = rowToCheck[keys[3]]; // Coluna D
+        if (sheetName === 'Sheet4' && keys[5]) dealer = rowToCheck[keys[5]]; // Coluna F
+      }
+      const dealerStr = dealer !== undefined && dealer !== null ? String(dealer).trim() : '';
+      if (!dealerStr || !filters.selectedDealers.includes(dealerStr)) {
+        console.log(`🚫 ${sheetName} - Linha rejeitada por dealer: ${dealerStr} não está em ${filters.selectedDealers}`);
         return false;
       }
     }
@@ -192,7 +198,7 @@ function calculateFilteredMetrics(
     },
     testDrivesVendidos: {
       testDrives: totalTestDrives,
-      vendas: testDrivesFaturados
+      vendas: totalFaturamentos
     },
     jornadaCompleta: {
       leads: totalLeads,
