@@ -7,12 +7,13 @@ import { DealerComparisonData, DealerMetrics } from '@/utils/dealerMetrics';
 
 interface DealersComparisonProps {
   data: DealerComparisonData;
+  hasSelectedDealers?: boolean;
 }
 
 type SortField = 'dealerName' | 'leads' | 'testDrives' | 'sales' | 'leadsToTestDriveRate' | 'testDriveToSalesRate';
 type SortDirection = 'asc' | 'desc';
 
-export default function DealersComparison({ data }: DealersComparisonProps) {
+export default function DealersComparison({ data, hasSelectedDealers = false }: DealersComparisonProps) {
   const [sortField, setSortField] = useState<SortField>('leads');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
@@ -193,15 +194,17 @@ export default function DealersComparison({ data }: DealersComparisonProps) {
                 </th>
               </tr>
               
-              {/* Linha de referência BR */}
-              <tr className="bg-secondary/30 border-b border-border sticky top-[49px] z-10">
-                <td className="py-2 px-2 font-medium text-primary bg-secondary/30">Total BR</td>
-                <td className="text-right py-2 px-2 text-sm font-medium bg-secondary/30">{formatNumber(data.brMetrics.leads)}</td>
-                <td className="text-right py-2 px-2 text-sm font-medium bg-secondary/30">{formatNumber(data.brMetrics.testDrives)}</td>
-                <td className="text-right py-2 px-2 text-sm font-medium bg-secondary/30">{formatNumber(data.brMetrics.sales)}</td>
-                <td className="text-right py-2 px-2 text-sm font-medium bg-secondary/30">{formatPercentage(data.brMetrics.leadsToTestDriveRate)}</td>
-                <td className="text-right py-2 px-2 text-sm font-medium bg-secondary/30">{formatPercentage(data.brMetrics.testDriveToSalesRate)}</td>
-              </tr>
+              {/* Linha de referência BR - só mostra quando há dealers selecionados */}
+              {hasSelectedDealers && (
+                <tr className="bg-secondary/30 border-b border-border sticky top-[49px] z-10">
+                  <td className="py-2 px-2 font-medium text-primary bg-secondary/30">Total BR</td>
+                  <td className="text-right py-2 px-2 text-sm font-medium bg-secondary/30">{formatNumber(data.brMetrics.leads)}</td>
+                  <td className="text-right py-2 px-2 text-sm font-medium bg-secondary/30">{formatNumber(data.brMetrics.testDrives)}</td>
+                  <td className="text-right py-2 px-2 text-sm font-medium bg-secondary/30">{formatNumber(data.brMetrics.sales)}</td>
+                  <td className="text-right py-2 px-2 text-sm font-medium bg-secondary/30">{formatPercentage(data.brMetrics.leadsToTestDriveRate)}</td>
+                  <td className="text-right py-2 px-2 text-sm font-medium bg-secondary/30">{formatPercentage(data.brMetrics.testDriveToSalesRate)}</td>
+                </tr>
+              )}
             </thead>
             
             <tbody>
@@ -227,16 +230,24 @@ export default function DealersComparison({ data }: DealersComparisonProps) {
                     />
                   </td>
                   <td className="text-right py-3 px-2">
-                    <PerformanceCell 
-                      dealerValue={dealer.leadsToTestDriveRate} 
-                      brValue={data.brMetrics.leadsToTestDriveRate}
-                    />
+                    {hasSelectedDealers ? (
+                      <PerformanceCell 
+                        dealerValue={dealer.leadsToTestDriveRate} 
+                        brValue={data.brMetrics.leadsToTestDriveRate}
+                      />
+                    ) : (
+                      <span className="font-medium">{formatPercentage(dealer.leadsToTestDriveRate)}</span>
+                    )}
                   </td>
                   <td className="text-right py-3 px-2">
-                    <PerformanceCell 
-                      dealerValue={dealer.testDriveToSalesRate} 
-                      brValue={data.brMetrics.testDriveToSalesRate}
-                    />
+                    {hasSelectedDealers ? (
+                      <PerformanceCell 
+                        dealerValue={dealer.testDriveToSalesRate} 
+                        brValue={data.brMetrics.testDriveToSalesRate}
+                      />
+                    ) : (
+                      <span className="font-medium">{formatPercentage(dealer.testDriveToSalesRate)}</span>
+                    )}
                   </td>
                 </tr>
               ))}
