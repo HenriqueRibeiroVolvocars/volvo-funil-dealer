@@ -3,43 +3,83 @@ import jsPDF from 'jspdf';
 
 export const exportToPDF = async (elementId: string = 'dashboard-content') => {
   try {
-    // Encontrar o elemento ou usar o body como fallback
-    const element = document.getElementById(elementId) || document.body;
+    // Encontrar os elementos principais
+    const mainElement = document.getElementById(elementId) || document.body;
+    const dealersComparison = document.querySelector('[data-component="dealers-comparison"]') as HTMLElement;
     
-    // Capturar screenshot do elemento
-    const canvas = await html2canvas(element, {
-      scale: 1.2, // Escala reduzida para arquivo menor
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-      height: element.scrollHeight,
-      width: element.scrollWidth
-    });
-
-    // Configurar PDF com compressão JPEG
-    const imgData = canvas.toDataURL('image/jpeg', 0.8); // JPEG com 80% de qualidade
+    // Configurar PDF
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
       format: 'a4'
     });
 
-    // Calcular dimensões para caber na página
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = canvas.width;
-    const imgHeight = canvas.height;
+
+    // Capturar dashboard principal (sem o comparativo)
+    if (dealersComparison) {
+      dealersComparison.style.display = 'none';
+    }
     
-    // Manter proporção da imagem
-    const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-    const scaledWidth = imgWidth * ratio;
-    const scaledHeight = imgHeight * ratio;
+    const mainCanvas = await html2canvas(mainElement, {
+      scale: 1.2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      height: mainElement.scrollHeight,
+      width: mainElement.scrollWidth
+    });
 
-    // Adicionar imagem ao PDF
-    pdf.addImage(imgData, 'JPEG', 0, 0, scaledWidth, scaledHeight);
+    // Restaurar visibilidade do comparativo
+    if (dealersComparison) {
+      dealersComparison.style.display = '';
+    }
 
-    // Gerar nome do arquivo com data atual
+    // Adicionar primeira página (dashboard principal)
+    const mainImgData = mainCanvas.toDataURL('image/jpeg', 0.8);
+    const mainRatio = Math.min(pdfWidth / mainCanvas.width, pdfHeight / mainCanvas.height);
+    const mainScaledWidth = mainCanvas.width * mainRatio;
+    const mainScaledHeight = mainCanvas.height * mainRatio;
+    
+    pdf.addImage(mainImgData, 'JPEG', 0, 0, mainScaledWidth, mainScaledHeight);
+
+    // Se existe comparativo de dealers, adicionar em página separada
+    if (dealersComparison) {
+      // Remover altura máxima temporariamente para capturar tabela completa
+      const originalStyle = dealersComparison.style.cssText;
+      const tableContainer = dealersComparison.querySelector('.overflow-x-auto') as HTMLElement;
+      if (tableContainer) {
+        tableContainer.style.maxHeight = 'none';
+        tableContainer.style.overflowY = 'visible';
+      }
+
+      const dealersCanvas = await html2canvas(dealersComparison, {
+        scale: 1.2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        height: dealersComparison.scrollHeight,
+        width: dealersComparison.scrollWidth
+      });
+
+      // Restaurar estilo original
+      dealersComparison.style.cssText = originalStyle;
+
+      // Nova página para o comparativo
+      pdf.addPage();
+      
+      const dealersImgData = dealersCanvas.toDataURL('image/jpeg', 0.8);
+      const dealersRatio = Math.min(pdfWidth / dealersCanvas.width, pdfHeight / dealersCanvas.height);
+      const dealersScaledWidth = dealersCanvas.width * dealersRatio;
+      const dealersScaledHeight = dealersCanvas.height * dealersRatio;
+      
+      pdf.addImage(dealersImgData, 'JPEG', 0, 0, dealersScaledWidth, dealersScaledHeight);
+    }
+
+    // Gerar nome do arquivo
     const now = new Date();
     const dateString = now.toLocaleDateString('pt-BR').replace(/\//g, '-');
     const fileName = `funil-comercial-volvo-${dateString}.pdf`;

@@ -114,7 +114,7 @@ export default function DealersComparison({ data }: DealersComparisonProps) {
   };
 
   return (
-    <section>
+    <section data-component="dealers-comparison">
       <Card className="funnel-card">
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
