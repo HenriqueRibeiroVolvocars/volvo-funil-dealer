@@ -19,6 +19,13 @@ export interface FunnelMetrics {
   };
 }
 
+export interface RawSheetData {
+  sheet1Data: any[];
+  sheet2Data: any[];
+  sheet3Data: any[];
+  sheet4Data: any[];
+}
+
 export interface ProcessedData {
   avgLeadToTestDrive: number | null;
   avgTestDriveToFaturamento: number | null; 
@@ -35,6 +42,8 @@ export interface ProcessedData {
     start: Date | null;
     end: Date | null;
   };
+  rawData: RawSheetData;
+  dealers: string[];
 }
 
 // Função auxiliar para buscar valores nas colunas
@@ -164,6 +173,9 @@ export async function processExcelFile(file: File): Promise<ProcessedData> {
           console.log('❌ Nenhuma data válida encontrada!');
         }
 
+        // Extrair dealers únicos das abas
+        const dealers = extractDealers(sheet1Data, sheet2Data, sheet3Data, sheet4Data);
+
         // Processar métricas
         const metrics = calculateMetrics(sheet1Data, sheet2Data, sheet3Data, sheet4Data);
         
@@ -173,7 +185,14 @@ export async function processExcelFile(file: File): Promise<ProcessedData> {
           period: {
             start: periodStart,
             end: periodEnd
-          }
+          },
+          rawData: {
+            sheet1Data,
+            sheet2Data,
+            sheet3Data,
+            sheet4Data
+          },
+          dealers
         };
         
         console.log('📅 Período extraído:', {
@@ -199,7 +218,21 @@ export async function processExcelFile(file: File): Promise<ProcessedData> {
   });
 }
 
-function calculateMetrics(sheet1Data: any[], sheet2Data: any[], sheet3Data: any[], sheet4Data: any[] = []): Omit<ProcessedData, 'period'> {
+function extractDealers(sheet1Data: any[], sheet2Data: any[], sheet3Data: any[], sheet4Data: any[]): string[] {
+  const dealerSet = new Set<string>();
+  
+  // Extrair dealers de todas as abas
+  [...sheet1Data, ...sheet2Data, ...sheet3Data, ...sheet4Data].forEach(row => {
+    const dealer = getValue(row, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
+    if (dealer && typeof dealer === 'string' && dealer.trim()) {
+      dealerSet.add(dealer.trim());
+    }
+  });
+  
+  return Array.from(dealerSet).sort();
+}
+
+function calculateMetrics(sheet1Data: any[], sheet2Data: any[], sheet3Data: any[], sheet4Data: any[] = []): Omit<ProcessedData, 'period' | 'rawData' | 'dealers'> {
   
   // Contadores básicos
   const totalLeads = sheet1Data.length;

@@ -1,18 +1,30 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import UploadZone from '@/components/UploadZone';
 import KpiCards from '@/components/KpiCards';
 import SalesFunnel from '@/components/SalesFunnel';
 import MultipleFunnels from '@/components/MultipleFunnels';
 import GeneralFunnel from '@/components/GeneralFunnel';
+import FilterBar from '@/components/FilterBar';
 import { processExcelFile, ProcessedData } from '@/utils/excelProcessor';
+import { applyFilters, FilterOptions } from '@/utils/dataFilters';
 import { useToast } from '@/hooks/use-toast';
 import { AlertCircle } from 'lucide-react';
 
 export default function Index() {
-  const [data, setData] = useState<ProcessedData | null>(null);
+  const [originalData, setOriginalData] = useState<ProcessedData | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<FilterOptions>({
+    dateRange: { start: null, end: null },
+    selectedDealers: []
+  });
   const { toast } = useToast();
+
+  // Aplicar filtros aos dados originais
+  const data = useMemo(() => {
+    if (!originalData) return null;
+    return applyFilters(originalData, filters);
+  }, [originalData, filters]);
 
   const handleFileUpload = async (file: File) => {
     setIsProcessing(true);
@@ -22,7 +34,7 @@ export default function Index() {
 
     try {
       const processedData = await processExcelFile(file);
-      setData(processedData);
+      setOriginalData(processedData);
       
       console.log('✅ Processamento concluído com sucesso!');
       
@@ -71,7 +83,7 @@ export default function Index() {
       )}
 
       {/* Botão Upload - Canto superior direito */}
-      {!data && (
+      {!originalData && (
         <UploadZone 
           onFileUpload={handleFileUpload}
           isProcessing={isProcessing}
@@ -79,6 +91,16 @@ export default function Index() {
       )}
       <main className="max-w-6xl mx-auto px-6 py-8">
         <div className="space-y-8">
+          {/* Filtros */}
+          {originalData && !error && (
+            <FilterBar
+              dealers={originalData.dealers}
+              filters={filters}
+              onFiltersChange={setFilters}
+              originalPeriod={originalData.period}
+            />
+          )}
+
           {/* Error Display */}
           {error && (
             <section>
@@ -136,7 +158,7 @@ export default function Index() {
           )}
 
           {/* Instructions */}
-          {!data && !error && !isProcessing && (
+          {!originalData && !error && !isProcessing && (
             <section>
               <div className="funnel-card bg-secondary/30">
                 <h3 className="text-lg font-medium text-foreground mb-4">
