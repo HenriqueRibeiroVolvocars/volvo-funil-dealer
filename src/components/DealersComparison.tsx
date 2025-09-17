@@ -180,10 +180,10 @@ export default function DealersComparison({ data }: DealersComparisonProps) {
                   Concessionária
                 </th>
                 <th className="text-right py-3 px-2 font-medium text-foreground bg-background">
-                  Visitas
+                  Leads
                 </th>
                 <th className="text-right py-3 px-2 font-medium text-foreground bg-background">
-                  Leads
+                  Visitas
                 </th>
                 <th className="text-right py-3 px-2 font-medium text-foreground bg-background">
                   Test Drives
@@ -208,8 +208,8 @@ export default function DealersComparison({ data }: DealersComparisonProps) {
               {/* Linha de referência BR */}
               <tr className="bg-secondary/30 border-b border-border sticky top-[49px] z-10">
                 <td className="py-2 px-2 font-medium text-primary bg-secondary/30">Total BR</td>
-                <td className="text-right py-2 px-2 text-sm font-medium bg-secondary/30">{formatNumber(data.brMetrics.storeVisits)}</td>
                 <td className="text-right py-2 px-2 text-sm font-medium bg-secondary/30">{formatNumber(data.brMetrics.leads)}</td>
+                <td className="text-right py-2 px-2 text-sm font-medium bg-secondary/30">{formatNumber(data.brMetrics.storeVisits)}</td>
                 <td className="text-right py-2 px-2 text-sm font-medium bg-secondary/30">{formatNumber(data.brMetrics.testDrives)}</td>
                 <td className="text-right py-2 px-2 text-sm font-medium bg-secondary/30">{formatNumber(data.brMetrics.sales)}</td>
                 <td className="text-right py-2 px-2 text-sm font-medium bg-secondary/30">{formatPercentage(data.brMetrics.leadsToTestDriveRate)}</td>
@@ -225,14 +225,14 @@ export default function DealersComparison({ data }: DealersComparisonProps) {
                   <td className="py-3 px-2 font-medium">{dealer.dealerName}</td>
                   <td className="text-right py-3 px-2">
                     <AbsoluteValueCell 
-                      dealerValue={dealer.storeVisits} 
-                      totalBrValue={data.brMetrics.storeVisits}
+                      dealerValue={dealer.leads} 
+                      totalBrValue={data.brMetrics.leads}
                     />
                   </td>
                   <td className="text-right py-3 px-2">
                     <AbsoluteValueCell 
-                      dealerValue={dealer.leads} 
-                      totalBrValue={data.brMetrics.leads}
+                      dealerValue={dealer.storeVisits} 
+                      totalBrValue={data.brMetrics.storeVisits}
                     />
                   </td>
                   <td className="text-right py-3 px-2">

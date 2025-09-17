@@ -26,7 +26,8 @@ export default function MultipleFunnels({ data, originalData, hasFiltersApplied 
       from: formatNumber(data.leadsDiretos.leads),
       to: formatNumber(data.leadsDiretos.faturados),
       fromLabel: 'Leads',
-      toLabel: 'Faturados'
+      toLabel: 'Faturados',
+      isComparison: false
     },
     {
       title: 'Jornada Completa',
@@ -36,7 +37,8 @@ export default function MultipleFunnels({ data, originalData, hasFiltersApplied 
       from: formatNumber(data.jornadaCompleta.leads),
       to: formatNumber(data.jornadaCompleta.faturados),
       fromLabel: 'Leads',
-      toLabel: 'Faturados'
+      toLabel: 'Faturados',
+      isComparison: false
     },
     {
       title: 'Leads → Test Drive',
@@ -46,7 +48,8 @@ export default function MultipleFunnels({ data, originalData, hasFiltersApplied 
       from: formatNumber(data.leadsComTestDrive.leads),
       to: formatNumber(data.leadsComTestDrive.testDrives),
       fromLabel: 'Leads',
-      toLabel: 'Test Drives'
+      toLabel: 'Test Drives',
+      isComparison: false
     },
     {
       title: 'Test Drive → Faturados',
@@ -56,27 +59,30 @@ export default function MultipleFunnels({ data, originalData, hasFiltersApplied 
       from: formatNumber(data.testDrivesVendidos.testDrives),
       to: formatNumber(data.testDrivesVendidos.vendas),
       fromLabel: 'Test Drives',
-      toLabel: 'Faturados'
+      toLabel: 'Faturados',
+      isComparison: false
     },
     {
       title: 'Visitas → Test Drive',
-      description: 'Taxa indicativa: visitas que realizaram test drive',
+      description: 'Quantidade de Visitas vs Quantidade de Test Drives',
       icon: Store,
-      conversion: calculateConversion(data.visitasTestDrive.visitas, data.visitasTestDrive.testDrives),
+      conversion: `${formatNumber(data.visitasTestDrive.visitas)} vs ${formatNumber(data.visitasTestDrive.testDrives)}`,
       from: formatNumber(data.visitasTestDrive.visitas),
       to: formatNumber(data.visitasTestDrive.testDrives),
       fromLabel: 'Visitas',
-      toLabel: 'Test Drives'
+      toLabel: 'Test Drives',
+      isComparison: true
     },
     {
       title: 'Visitas → Faturamento',
-      description: 'Taxa indicativa: visitas que resultaram em compra',
+      description: 'Quantidade de visitas vs faturamento',
       icon: ShoppingBag,
-      conversion: calculateConversion(data.visitasFaturamento.visitas, data.visitasFaturamento.faturados),
+      conversion: `${formatNumber(data.visitasFaturamento.visitas)} vs ${formatNumber(data.visitasFaturamento.faturados)}`,
       from: formatNumber(data.visitasFaturamento.visitas),
       to: formatNumber(data.visitasFaturamento.faturados),
       fromLabel: 'Visitas',
-      toLabel: 'Faturados'
+      toLabel: 'Faturados',
+      isComparison: true
     }
   ];
 
@@ -100,8 +106,8 @@ export default function MultipleFunnels({ data, originalData, hasFiltersApplied 
                     {index === 1 && calculateConversion(originalData.jornadaCompleta.leads, originalData.jornadaCompleta.faturados)}
                     {index === 2 && calculateConversion(originalData.leadsComTestDrive.leads, originalData.leadsComTestDrive.testDrives)}
                     {index === 3 && calculateConversion(originalData.testDrivesVendidos.testDrives, originalData.testDrivesVendidos.vendas)}
-                    {index === 4 && calculateConversion(originalData.visitasTestDrive.visitas, originalData.visitasTestDrive.testDrives)}
-                    {index === 5 && calculateConversion(originalData.visitasFaturamento.visitas, originalData.visitasFaturamento.faturados)}
+                    {index === 4 && `${formatNumber(originalData.visitasTestDrive.visitas)} vs ${formatNumber(originalData.visitasTestDrive.testDrives)}`}
+                    {index === 5 && `${formatNumber(originalData.visitasFaturamento.visitas)} vs ${formatNumber(originalData.visitasFaturamento.faturados)}`}
                   </div>
                 </div>
               )}
@@ -119,7 +125,7 @@ export default function MultipleFunnels({ data, originalData, hasFiltersApplied 
                   {card.conversion}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Taxa de Conversão
+                  {card.isComparison ? 'Comparação' : 'Taxa de Conversão'}
                 </div>
               </div>
               
