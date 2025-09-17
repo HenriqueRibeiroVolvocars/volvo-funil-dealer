@@ -10,8 +10,6 @@ export interface DealerMetrics {
   leadsToTestDriveRate: number;
   testDriveToSalesRate: number;
   totalConversionRate: number;
-  visitasToTestDriveRate: number;
-  visitasToSalesRate: number;
 }
 
 export interface DealerComparisonData {
@@ -210,8 +208,6 @@ export function calculateDealerComparison(
     const leadsToTestDriveRate = data.leads > 0 ? (data.leadsWithTestDrive / data.leads) * 100 : 0;
     const testDriveToSalesRate = data.testDrives > 0 ? (data.testDrivesFaturados / data.testDrives) * 100 : 0;
     const totalConversionRate = data.leads > 0 ? (data.sales / data.leads) * 100 : 0;
-    const visitasToTestDriveRate = data.storeVisits > 0 ? (data.testDrives / data.storeVisits) * 100 : 0;
-    const visitasToSalesRate = data.storeVisits > 0 ? (data.sales / data.storeVisits) * 100 : 0;
     
     return {
       dealerName: data.originalName, // Usar nome original, não normalizado
@@ -221,9 +217,7 @@ export function calculateDealerComparison(
       storeVisits: data.storeVisits,
       leadsToTestDriveRate,
       testDriveToSalesRate,
-      totalConversionRate,
-      visitasToTestDriveRate,
-      visitasToSalesRate
+      totalConversionRate
     };
   });
   
@@ -252,9 +246,7 @@ export function calculateDealerComparison(
     storeVisits: totals.storeVisits,
     leadsToTestDriveRate: totals.leads > 0 ? (totals.leadsWithTestDrive / totals.leads) * 100 : 0,
     testDriveToSalesRate: totals.testDrives > 0 ? (totals.testDrivesFaturados / totals.testDrives) * 100 : 0,
-    totalConversionRate: totals.leads > 0 ? (totals.sales / totals.leads) * 100 : 0,
-    visitasToTestDriveRate: totals.storeVisits > 0 ? (totals.testDrives / totals.storeVisits) * 100 : 0,
-    visitasToSalesRate: totals.storeVisits > 0 ? (totals.sales / totals.storeVisits) * 100 : 0
+    totalConversionRate: totals.leads > 0 ? (totals.sales / totals.leads) * 100 : 0
   };
   
   // Ordenar dealers por total de leads (maior para menor)

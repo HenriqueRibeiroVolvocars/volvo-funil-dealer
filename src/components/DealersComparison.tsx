@@ -9,7 +9,7 @@ interface DealersComparisonProps {
   data: DealerComparisonData;
 }
 
-type SortField = 'dealerName' | 'leads' | 'testDrives' | 'sales' | 'storeVisits' | 'leadsToTestDriveRate' | 'testDriveToSalesRate' | 'visitasToTestDriveRate' | 'visitasToSalesRate';
+type SortField = 'dealerName' | 'leads' | 'testDrives' | 'sales' | 'storeVisits' | 'leadsToTestDriveRate' | 'testDriveToSalesRate';
 type SortDirection = 'asc' | 'desc';
 
 export default function DealersComparison({ data }: DealersComparisonProps) {
@@ -24,8 +24,6 @@ export default function DealersComparison({ data }: DealersComparisonProps) {
     { value: 'sales', label: 'Quantidade de Vendas' },
     { value: 'leadsToTestDriveRate', label: 'Taxa Lead → TD' },
     { value: 'testDriveToSalesRate', label: 'Taxa TD → Venda' },
-    { value: 'visitasToTestDriveRate', label: 'Taxa Visitas → TD' },
-    { value: 'visitasToSalesRate', label: 'Taxa Visitas → Venda' },
   ] as const;
 
   const formatNumber = (value: number): string => {
@@ -197,12 +195,6 @@ export default function DealersComparison({ data }: DealersComparisonProps) {
                 <th className="text-right py-3 px-2 font-medium text-foreground bg-background">
                   Taxa TD→Venda
                 </th>
-                <th className="text-right py-3 px-2 font-medium text-foreground bg-background">
-                  Taxa Visitas→TD
-                </th>
-                <th className="text-right py-3 px-2 font-medium text-foreground bg-background">
-                  Taxa Visitas→Venda
-                </th>
               </tr>
               
               {/* Linha de referência BR */}
@@ -214,8 +206,6 @@ export default function DealersComparison({ data }: DealersComparisonProps) {
                 <td className="text-right py-2 px-2 text-sm font-medium bg-secondary/30">{formatNumber(data.brMetrics.sales)}</td>
                 <td className="text-right py-2 px-2 text-sm font-medium bg-secondary/30">{formatPercentage(data.brMetrics.leadsToTestDriveRate)}</td>
                 <td className="text-right py-2 px-2 text-sm font-medium bg-secondary/30">{formatPercentage(data.brMetrics.testDriveToSalesRate)}</td>
-                <td className="text-right py-2 px-2 text-sm font-medium bg-secondary/30">{formatPercentage(data.brMetrics.visitasToTestDriveRate)}</td>
-                <td className="text-right py-2 px-2 text-sm font-medium bg-secondary/30">{formatPercentage(data.brMetrics.visitasToSalesRate)}</td>
               </tr>
             </thead>
             
@@ -257,18 +247,6 @@ export default function DealersComparison({ data }: DealersComparisonProps) {
                     <PerformanceCell 
                       dealerValue={dealer.testDriveToSalesRate} 
                       brValue={data.brMetrics.testDriveToSalesRate}
-                    />
-                  </td>
-                  <td className="text-right py-3 px-2">
-                    <PerformanceCell 
-                      dealerValue={dealer.visitasToTestDriveRate} 
-                      brValue={data.brMetrics.visitasToTestDriveRate}
-                    />
-                  </td>
-                  <td className="text-right py-3 px-2">
-                    <PerformanceCell 
-                      dealerValue={dealer.visitasToSalesRate} 
-                      brValue={data.brMetrics.visitasToSalesRate}
                     />
                   </td>
                 </tr>
