@@ -66,6 +66,20 @@ function getValue(row: any, possibleKeys: string[]): any {
   return null;
 }
 
+// Função para normalizar nomes de dealers
+function normalizeDealerName(dealerName: string): string {
+  if (!dealerName) return '';
+  
+  return dealerName
+    .trim()
+    .replace(/\([^)]*\)/g, '') // Remove códigos entre parênteses como (462011)
+    .toLowerCase()
+    .normalize('NFD') // Decompõe caracteres acentuados
+    .replace(/[\u0300-\u036f]/g, '') // Remove os diacríticos (acentos)
+    .replace(/\s+/g, ' ') // Normaliza espaços múltiplos para um só
+    .trim();
+}
+
 function parseExcelDate(dateValue: any): Date | null {
   if (!dateValue) return null;
   
@@ -234,16 +248,27 @@ export async function processExcelFile(file: File): Promise<ProcessedData> {
 }
 
 function extractDealers(sheet1Data: any[], sheet2Data: any[], sheet3Data: any[], sheet4Data: any[]): string[] {
-  const dealerSet = new Set<string>();
+  const dealerMap = new Map<string, string>(); // normalized -> original
   
   console.info('🏢 Extraindo dealers de cada sheet:');
+  
+  // Função para adicionar dealer ao mapa com normalização
+  const addDealer = (dealerName: string) => {
+    if (dealerName && typeof dealerName === 'string' && dealerName.trim()) {
+      const original = dealerName.trim();
+      const normalized = normalizeDealerName(original);
+      if (normalized && !dealerMap.has(normalized)) {
+        dealerMap.set(normalized, original);
+      }
+    }
+  };
   
   // Extrair dealers da Sheet1
   let sheet1Dealers = 0;
   sheet1Data.forEach(row => {
     const dealer = getValue(row, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
-    if (dealer && typeof dealer === 'string' && dealer.trim()) {
-      dealerSet.add(dealer.trim());
+    if (dealer) {
+      addDealer(dealer);
       sheet1Dealers++;
     }
   });
@@ -258,11 +283,8 @@ function extractDealers(sheet1Data: any[], sheet2Data: any[], sheet3Data: any[],
       if (fallbackKey) dealer = row[fallbackKey];
     }
     if (dealer !== undefined && dealer !== null) {
-      const dealerStr = String(dealer).trim();
-      if (dealerStr) {
-        dealerSet.add(dealerStr);
-        sheet2Dealers++;
-      }
+      addDealer(String(dealer));
+      sheet2Dealers++;
     }
   });
   console.info(`  - Sheet2: ${sheet2Dealers} linhas com dealer`);
@@ -271,8 +293,8 @@ function extractDealers(sheet1Data: any[], sheet2Data: any[], sheet3Data: any[],
   let sheet3Dealers = 0;
   sheet3Data.forEach(row => {
     const dealer = getValue(row, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
-    if (dealer && typeof dealer === 'string' && dealer.trim()) {
-      dealerSet.add(dealer.trim());
+    if (dealer) {
+      addDealer(dealer);
       sheet3Dealers++;
     }
   });
@@ -288,16 +310,13 @@ function extractDealers(sheet1Data: any[], sheet2Data: any[], sheet3Data: any[],
       if (fallbackKey) dealer = row[fallbackKey];
     }
     if (dealer !== undefined && dealer !== null) {
-      const dealerStr = String(dealer).trim();
-      if (dealerStr) {
-        dealerSet.add(dealerStr);
-        sheet4Dealers++;
-      }
+      addDealer(String(dealer));
+      sheet4Dealers++;
     }
   });
   console.info(`  - Sheet4: ${sheet4Dealers} linhas com dealer`);
   
-  const dealers = Array.from(dealerSet).sort();
+  const dealers = Array.from(dealerMap.values()).sort();
   console.info(`🏢 Total de dealers únicos encontrados: ${dealers.length}`);
   console.info(`🏢 Lista de dealers:`, dealers);
   

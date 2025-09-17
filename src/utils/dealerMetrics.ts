@@ -29,6 +29,20 @@ function getValue(row: any, possibleKeys: string[]): any {
   return null;
 }
 
+// Função para normalizar nomes de dealers
+function normalizeDealerName(dealerName: string): string {
+  if (!dealerName) return '';
+  
+  return dealerName
+    .trim()
+    .replace(/\([^)]*\)/g, '') // Remove códigos entre parênteses como (462011)
+    .toLowerCase()
+    .normalize('NFD') // Decompõe caracteres acentuados
+    .replace(/[\u0300-\u036f]/g, '') // Remove os diacríticos (acentos)
+    .replace(/\s+/g, ' ') // Normaliza espaços múltiplos para um só
+    .trim();
+}
+
 // Função para extrair dealer de uma linha, considerando diferentes sheets
 function getDealerFromRow(row: any, sheetName: string, sheet1Data?: any[]): string | null {
   // Primeiro, tentar extrair dealer diretamente da linha
@@ -43,6 +57,10 @@ function getDealerFromRow(row: any, sheetName: string, sheet1Data?: any[]): stri
     // Para Sheet4, dealer pode estar na coluna F (índice 5)
     if (sheetName === 'Sheet4' && keys[5]) {
       dealer = row[keys[5]];
+    }
+    // Para Sheet5, dealer pode estar na coluna A (índice 0)
+    if (sheetName === 'Sheet5' && keys[0]) {
+      dealer = row[keys[0]];
     }
   }
   
@@ -94,8 +112,9 @@ export function calculateDealerComparison(
   console.groupEnd();
   const useSheet4 = filteredData.rawData.sheet4Data.length > 0;
   
-  // Mapear dados por dealer
+  // Mapear dados por dealer usando nomes normalizados como chave
   const dealerDataMap = new Map<string, {
+    originalName: string;
     leads: number;
     testDrives: number;
     sales: number;
@@ -104,22 +123,28 @@ export function calculateDealerComparison(
     testDrivesFaturados: number;
   }>();
   
+  // Função helper para obter/criar entrada no mapa de dealers
+  const getDealerData = (dealerName: string) => {
+    const normalized = normalizeDealerName(dealerName);
+    if (!dealerDataMap.has(normalized)) {
+      dealerDataMap.set(normalized, {
+        originalName: dealerName,
+        leads: 0,
+        testDrives: 0,
+        sales: 0,
+        storeVisits: 0,
+        leadsWithTestDrive: 0,
+        testDrivesFaturados: 0
+      });
+    }
+    return dealerDataMap.get(normalized)!;
+  };
+  
   // Processar Sheet1 (Leads)
   filteredData.rawData.sheet1Data.forEach(row => {
     const dealer = getDealerFromRow(row, 'Sheet1');
     if (dealer) {
-      if (!dealerDataMap.has(dealer)) {
-        dealerDataMap.set(dealer, {
-          leads: 0,
-          testDrives: 0,
-          sales: 0,
-          storeVisits: 0,
-          leadsWithTestDrive: 0,
-          testDrivesFaturados: 0
-        });
-      }
-      
-      const dealerData = dealerDataMap.get(dealer)!;
+      const dealerData = getDealerData(dealer);
       dealerData.leads++;
       
       // Verificar se lead teve test drive
@@ -140,18 +165,7 @@ export function calculateDealerComparison(
   filteredData.rawData.sheet2Data.forEach(row => {
     const dealer = getDealerFromRow(row, 'Sheet2', filteredData.rawData.sheet1Data);
     if (dealer) {
-      if (!dealerDataMap.has(dealer)) {
-        dealerDataMap.set(dealer, {
-          leads: 0,
-          testDrives: 0,
-          sales: 0,
-          storeVisits: 0,
-          leadsWithTestDrive: 0,
-          testDrivesFaturados: 0
-        });
-      }
-      
-      const dealerData = dealerDataMap.get(dealer)!;
+      const dealerData = getDealerData(dealer);
       dealerData.testDrives++;
       
       // Verificar se test drive foi faturado
@@ -166,18 +180,7 @@ export function calculateDealerComparison(
   filteredData.rawData.sheet4Data.forEach(row => {
     const dealer = getDealerFromRow(row, 'Sheet4');
     if (dealer) {
-      if (!dealerDataMap.has(dealer)) {
-        dealerDataMap.set(dealer, {
-          leads: 0,
-          testDrives: 0,
-          sales: 0,
-          storeVisits: 0,
-          leadsWithTestDrive: 0,
-          testDrivesFaturados: 0
-        });
-      }
-      
-      const dealerData = dealerDataMap.get(dealer)!;
+      const dealerData = getDealerData(dealer);
       dealerData.sales++;
     }
   });
@@ -186,18 +189,7 @@ export function calculateDealerComparison(
   filteredData.rawData.sheet5Data.forEach(row => {
     const dealer = getDealerFromRow(row, 'Sheet5');
     if (dealer) {
-      if (!dealerDataMap.has(dealer)) {
-        dealerDataMap.set(dealer, {
-          leads: 0,
-          testDrives: 0,
-          sales: 0,
-          storeVisits: 0,
-          leadsWithTestDrive: 0,
-          testDrivesFaturados: 0
-        });
-      }
-      
-      const dealerData = dealerDataMap.get(dealer)!;
+      const dealerData = getDealerData(dealer);
       // A coluna C deve conter o número de visitas
       const keys = Object.keys(row);
       const visitasValue = keys[2] ? row[keys[2]] : null; // Coluna C (índice 2)
@@ -214,7 +206,7 @@ export function calculateDealerComparison(
   }
   
   // Converter para array de métricas por dealer
-  const dealerMetrics: DealerMetrics[] = Array.from(dealerDataMap.entries()).map(([dealerName, data]) => {
+  const dealerMetrics: DealerMetrics[] = Array.from(dealerDataMap.entries()).map(([normalizedName, data]) => {
     const leadsToTestDriveRate = data.leads > 0 ? (data.leadsWithTestDrive / data.leads) * 100 : 0;
     const testDriveToSalesRate = data.testDrives > 0 ? (data.testDrivesFaturados / data.testDrives) * 100 : 0;
     const totalConversionRate = data.leads > 0 ? (data.sales / data.leads) * 100 : 0;
@@ -222,7 +214,7 @@ export function calculateDealerComparison(
     const visitasToSalesRate = data.storeVisits > 0 ? (data.sales / data.storeVisits) * 100 : 0;
     
     return {
-      dealerName,
+      dealerName: data.originalName, // Usar nome original, não normalizado
       leads: data.leads,
       testDrives: data.testDrives,
       sales: data.sales,

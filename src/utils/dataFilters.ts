@@ -18,6 +18,20 @@ function getValue(row: any, possibleKeys: string[]): any {
   return null;
 }
 
+// Função para normalizar nomes de dealers
+function normalizeDealerName(dealerName: string): string {
+  if (!dealerName) return '';
+  
+  return dealerName
+    .trim()
+    .replace(/\([^)]*\)/g, '') // Remove códigos entre parênteses como (462011)
+    .toLowerCase()
+    .normalize('NFD') // Decompõe caracteres acentuados
+    .replace(/[\u0300-\u036f]/g, '') // Remove os diacríticos (acentos)
+    .replace(/\s+/g, ' ') // Normaliza espaços múltiplos para um só
+    .trim();
+}
+
 // Função para enriquecer Sheet3 com dados de dealer da Sheet1 usando correlação por ID
 function enrichSheet3WithDealerInfo(sheet3Data: any[], sheet1Data: any[]): any[] {
   // Criar mapa de ID -> dados completos da Sheet1
@@ -99,9 +113,19 @@ function filterSheetData(data: any[], filters: FilterOptions, sheet1Data?: any[]
         if (sheetName === 'Sheet4' && keys[5]) dealer = rowToCheck[keys[5]]; // Coluna F
         if (sheetName === 'Sheet5' && keys[0]) dealer = rowToCheck[keys[0]]; // Coluna A
       }
+      
       const dealerStr = dealer !== undefined && dealer !== null ? String(dealer).trim() : '';
-      if (!dealerStr || !filters.selectedDealers.includes(dealerStr)) {
-        console.log(`🚫 ${sheetName} - Linha rejeitada por dealer: ${dealerStr} não está em ${filters.selectedDealers}`);
+      if (!dealerStr) {
+        console.log(`🚫 ${sheetName} - Linha rejeitada: nenhum dealer encontrado`);
+        return false;
+      }
+      
+      // Normalizar o dealer da linha e comparar com dealers selecionados normalizados
+      const normalizedRowDealer = normalizeDealerName(dealerStr);
+      const normalizedSelectedDealers = filters.selectedDealers.map(d => normalizeDealerName(d));
+      
+      if (!normalizedSelectedDealers.includes(normalizedRowDealer)) {
+        console.log(`🚫 ${sheetName} - Linha rejeitada por dealer: "${dealerStr}" (normalizado: "${normalizedRowDealer}") não está em ${filters.selectedDealers.map(d => `"${d}" (normalizado: "${normalizeDealerName(d)}")`)}`);
         return false;
       }
     }
