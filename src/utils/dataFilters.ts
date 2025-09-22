@@ -32,6 +32,82 @@ function normalizeDealerName(dealerName: string): string {
     .trim();
 }
 
+// Parser robusto de datas (dd/MM/yyyy, MM/yyyy, nomes PT-BR, ISO e serial do Excel)
+function parseFlexibleDate(input: any): Date | null {
+  if (!input && input !== 0) return null;
+  if (input instanceof Date) {
+    return isNaN(input.getTime()) ? null : input;
+  }
+  if (typeof input === 'number') {
+    // Serial do Excel (base 1899-12-30)
+    const date = new Date((input - 25569) * 86400 * 1000);
+    return isNaN(date.getTime()) ? null : date;
+  }
+  if (typeof input === 'string') {
+    let s = input.trim();
+    if (!s) return null;
+
+    // Normaliza acentos e caixa para comparação
+    const normalize = (str: string) => str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const sNorm = normalize(s);
+
+    // Se houver hora, considerar apenas a parte da data
+    const datePart = s.split(' ')[0];
+
+    // Padrão dd/MM/yyyy ou d/M/yy
+    let m = datePart.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+    if (m) {
+      let [_, d, mo, y] = m;
+      const day = parseInt(d, 10);
+      const month = parseInt(mo, 10);
+      let year = parseInt(y, 10);
+      if (year < 100) year += 2000;
+      const date = new Date(year, month - 1, day);
+      return isNaN(date.getTime()) ? null : date;
+    }
+
+    // Padrão MM/yyyy
+    m = datePart.match(/^(\d{1,2})[\/\-](\d{4})$/);
+    if (m) {
+      const month = parseInt(m[1], 10);
+      const year = parseInt(m[2], 10);
+      const date = new Date(year, month - 1, 1);
+      return isNaN(date.getTime()) ? null : date;
+    }
+
+    // Meses PT-BR (abreviação e nome completo): "set/2024", "setembro 2024"
+    const monthMap: Record<string, number> = {
+      jan: 1, janeiro: 1,
+      fev: 2, fevereiro: 2,
+      mar: 3, marco: 3, março: 3,
+      abr: 4, abril: 4,
+      mai: 5, maio: 5,
+      jun: 6, junho: 6,
+      jul: 7, julho: 7,
+      ago: 8, agosto: 8,
+      set: 9, setembro: 9,
+      out: 10, outubro: 10,
+      nov: 11, novembro: 11,
+      dez: 12, dezembro: 12
+    };
+    let m2 = sNorm.match(/^([a-zç]{3,10})[\/\-\s]+(\d{4})$/);
+    if (m2) {
+      const monthName = m2[1];
+      const year = parseInt(m2[2], 10);
+      const month = monthMap[monthName];
+      if (month) {
+        const date = new Date(year, month - 1, 1);
+        return isNaN(date.getTime()) ? null : date;
+      }
+    }
+
+    // ISO ou outros formatos reconhecíveis pelo JS
+    const iso = new Date(s);
+    return isNaN(iso.getTime()) ? null : iso;
+  }
+  return null;
+}
+
 // Função para enriquecer Sheet3 com dados de dealer da Sheet1 usando correlação por ID
 function enrichSheet3WithDealerInfo(sheet3Data: any[], sheet1Data: any[]): any[] {
   // Criar mapa de ID -> dados completos da Sheet1
@@ -132,50 +208,39 @@ function filterSheetData(data: any[], filters: FilterOptions, sheet1Data?: any[]
 
     // Filtro de data
     if (filters.dateRange.start || filters.dateRange.end) {
+      // Prioriza chaves padrão
       let dateValue = getValue(rowToCheck, ['dateSales', 'DateSales', 'Data', 'data']);
-      
-      // Para Sheet2, a data pode estar na coluna E (índice 4)
+
+      // Fallbacks por planilha
       if (!dateValue && sheetName === 'Sheet2') {
         const keys = Object.keys(rowToCheck);
         if (keys[4]) dateValue = rowToCheck[keys[4]]; // Coluna E
       }
-      
-      // Para Sheet4, a data pode estar na coluna D (índice 3)  
+
       if (!dateValue && sheetName === 'Sheet4') {
         const keys = Object.keys(rowToCheck);
         if (keys[3]) dateValue = rowToCheck[keys[3]]; // Coluna D
       }
 
-      // Para Sheet5, a data está na coluna B (índice 1)  
       if (!dateValue && sheetName === 'Sheet5') {
         const keys = Object.keys(rowToCheck);
-        if (keys[1]) dateValue = rowToCheck[keys[1]]; // Coluna B
+        if (keys[1]) dateValue = rowToCheck[keys[1]]; // Coluna B (data)
       }
-      
-      if (dateValue) {
-        let date: Date | null = null;
-        
-        if (typeof dateValue === 'string') {
-          date = new Date(dateValue);
-        } else if (typeof dateValue === 'number') {
-          // Se for número serial do Excel
-          date = new Date((dateValue - 25569) * 86400 * 1000);
-        }
-        
-        if (date && !isNaN(date.getTime())) {
-          if (filters.dateRange.start && date < filters.dateRange.start) {
-            console.log(`🚫 ${sheetName} - Linha rejeitada por data inicial: ${date} < ${filters.dateRange.start}`);
-            return false;
-          }
-          if (filters.dateRange.end && date > filters.dateRange.end) {
-            console.log(`🚫 ${sheetName} - Linha rejeitada por data final: ${date} > ${filters.dateRange.end}`);
-            return false;
-          }
-        } else {
-          console.log(`⚠️ ${sheetName} - Data inválida encontrada: ${dateValue}`);
-        }
-      } else {
-        console.log(`⚠️ ${sheetName} - Nenhuma data encontrada na linha`);
+
+      const date = parseFlexibleDate(dateValue);
+
+      if (!date) {
+        console.log(`🚫 ${sheetName} - Linha rejeitada: data inválida ou ausente (${dateValue}) com filtro ativo`);
+        return false;
+      }
+
+      if (filters.dateRange.start && date < filters.dateRange.start) {
+        console.log(`🚫 ${sheetName} - Linha rejeitada por data inicial: ${date} < ${filters.dateRange.start}`);
+        return false;
+      }
+      if (filters.dateRange.end && date > filters.dateRange.end) {
+        console.log(`🚫 ${sheetName} - Linha rejeitada por data final: ${date} > ${filters.dateRange.end}`);
+        return false;
       }
     }
 
@@ -392,37 +457,29 @@ export function applyFilters(originalData: ProcessedData, filters: FilterOptions
   
   [...filteredSheet1, ...filteredSheet2, ...filteredSheet3, ...filteredSheet4, ...filteredSheet5].forEach((row, index) => {
     let dateValue = getValue(row, ['dateSales', 'DateSales', 'Data', 'data']);
-    
-    // Para Sheet2, procurar na coluna E
-    if (!dateValue && index >= filteredSheet1.length && index < filteredSheet1.length + filteredSheet2.length) {
+
+    // Fallbacks por planilha no array combinado
+    if (!dateValue) {
       const keys = Object.keys(row);
-      if (keys[4]) dateValue = row[keys[4]]; // Coluna E
-    }
-    
-    // Para Sheet4, procurar na coluna D  
-    if (!dateValue && index >= filteredSheet1.length + filteredSheet2.length + filteredSheet3.length) {
-      const keys = Object.keys(row);
-      if (keys[3]) dateValue = row[keys[3]]; // Coluna D
+      const s1Len = filteredSheet1.length;
+      const s2Len = filteredSheet2.length;
+      const s3Len = filteredSheet3.length;
+      const s4Len = filteredSheet4.length;
+
+      if (index >= s1Len && index < s1Len + s2Len) {
+        if (keys[4]) dateValue = row[keys[4]]; // Sheet2 Coluna E
+      } else if (index >= s1Len + s2Len && index < s1Len + s2Len + s3Len) {
+        // Sheet3: sem fallback específico
+      } else if (index >= s1Len + s2Len + s3Len && index < s1Len + s2Len + s3Len + s4Len) {
+        if (keys[3]) dateValue = row[keys[3]]; // Sheet4 Coluna D
+      } else {
+        if (keys[1]) dateValue = row[keys[1]]; // Sheet5 Coluna B
+      }
     }
 
-    // Para Sheet5, procurar na coluna B (data)
-    if (!dateValue && index >= filteredSheet1.length + filteredSheet2.length + filteredSheet3.length + filteredSheet4.length) {
-      const keys = Object.keys(row);
-      if (keys[1]) dateValue = row[keys[1]]; // Coluna B
-    }
-    
-    if (dateValue) {
-      let date: Date | null = null;
-      
-      if (typeof dateValue === 'string') {
-        date = new Date(dateValue);
-      } else if (typeof dateValue === 'number') {
-        date = new Date((dateValue - 25569) * 86400 * 1000);
-      }
-      
-      if (date && !isNaN(date.getTime())) {
-        allFilteredDates.push(date);
-      }
+    const date = parseFlexibleDate(dateValue);
+    if (date) {
+      allFilteredDates.push(date);
     }
   });
 
