@@ -7,7 +7,8 @@ import MultipleFunnels from '@/components/MultipleFunnels';
 import GeneralFunnel from '@/components/GeneralFunnel';
 import DealersComparison from '@/components/DealersComparison';
 import FilterBar from '@/components/FilterBar';
-import { processExcelFile, processApiAndExcel, ProcessedData } from '@/utils/excelProcessor';
+import { processExcelFile, processApiAndExcel } from '@/utils/excelProcessor';
+import { ProcessedData } from '@/utils/types';
 import { applyFilters, FilterOptions } from '@/utils/dataFilters';
 import { calculateDealerComparison } from '@/utils/dealerMetrics';
 import { useToast } from '@/hooks/use-toast';
@@ -163,7 +164,7 @@ export default function Index() {
           </div>
           
           {/* Período e Export PDF no header (com botão Importar Visitas acima) */}
-          <div className="absolute top-4 right-4 space-y-2">
+          <div className="absolute top-4 left-4 space-y-2">
             {originalData && (
               <UploadZone
                 onFileUpload={handleVisitsUpload}

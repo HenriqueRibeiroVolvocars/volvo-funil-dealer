@@ -1,4 +1,4 @@
-import { ProcessedData, RawSheetData, FunnelMetrics } from './excelProcessor';
+import { ProcessedData, FunnelMetrics } from './types';
 
 export interface FilterOptions {
   dateRange: {
@@ -7,6 +7,10 @@ export interface FilterOptions {
   };
   selectedDealers: string[];
 }
+
+// Aliases comuns para flags/colunas usadas em diferentes planilhas
+const FLAG_TESTDRIVE_KEYS = ['Flag_TestDrive', 'flag_testdrive', 'flag_test_drive', 'FlagTestDrive', 'flagTestDrive'];
+const FLAG_FATURADO_KEYS = ['Flag_Faturado', 'flag_faturado', 'faturado', 'Faturado', 'flagFaturado', 'FlagFaturado'];
 
 // Função auxiliar para buscar valores nas colunas
 function getValue(row: any, possibleKeys: string[]): any {
@@ -108,31 +112,24 @@ function parseFlexibleDate(input: any): Date | null {
   return null;
 }
 
-// Função para enriquecer Sheet3 com dados de dealer da Sheet1 usando correlação por ID
-function enrichSheet3WithDealerInfo(sheet3Data: any[], sheet1Data: any[]): any[] {
-  // Criar mapa de ID -> dados completos da Sheet1
-  const sheet1Map = new Map();
+// Função para enriquecer uma sheet (Sheet2/Sheet3) com dados de dealer e dateSales da Sheet1 usando correlação por ID
+export function enrichSheetWithDealerInfo(sheetData: any[], sheet1Data: any[]): any[] {
+  if (!sheet1Data || sheet1Data.length === 0) return sheetData;
+
+  const sheet1Map = new Map<string, any>();
   sheet1Data.forEach(row => {
     const id = getValue(row, ['ID', 'id', 'Id']);
-    if (id) {
-      sheet1Map.set(String(id).trim(), row);
-    }
+    if (id) sheet1Map.set(String(id).trim(), row);
   });
 
-  // Enriquecer Sheet3 com informações de dealer da Sheet1
-  return sheet3Data.map(row => {
+  return sheetData.map(row => {
     const id = getValue(row, ['ID', 'id', 'Id']);
     if (id) {
       const sheet1Row = sheet1Map.get(String(id).trim());
       if (sheet1Row) {
         const dealer = getValue(sheet1Row, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
         const dateSales = getValue(sheet1Row, ['dateSales', 'DateSales', 'Data', 'data']);
-        
-        return {
-          ...row,
-          Dealer: dealer,
-          dateSales: dateSales
-        };
+        return { ...row, Dealer: dealer, dateSales };
       }
     }
     return row;
@@ -289,27 +286,27 @@ function calculateFilteredMetrics(
 
   // Análise Sheet1 - Leads
   const leadsWithTestDrive = filteredSheet1.filter(row => {
-    const flagTestDrive = getValue(row, ['Flag_TestDrive']);
-    return flagTestDrive === 1 || flagTestDrive === '1';
+    const flagTestDrive = getValue(row, FLAG_TESTDRIVE_KEYS);
+    return flagTestDrive === 1 || flagTestDrive === '1' || flagTestDrive === true;
   }).length;
 
   const leadsFaturados = filteredSheet1.filter(row => {
-    const flagFaturado = getValue(row, ['Flag_Faturado']);
-    return flagFaturado === 1 || flagFaturado === '1';
+    const flagFaturado = getValue(row, FLAG_FATURADO_KEYS);
+    return flagFaturado === 1 || flagFaturado === '1' || flagFaturado === true;
   }).length;
 
   // Análise Sheet2 - Test Drives
   const testDrivesFaturados = filteredSheet2.filter(row => {
-    const flagFaturado = getValue(row, ['Flag_Faturado']);
-    return flagFaturado === 1 || flagFaturado === '1';
+    const flagFaturado = getValue(row, FLAG_FATURADO_KEYS);
+    return flagFaturado === 1 || flagFaturado === '1' || flagFaturado === true;
   }).length;
 
   // Leads diretos (faturados sem test drive)
   const leadsDiretos = filteredSheet1.filter(row => {
-    const flagFaturado = getValue(row, ['Flag_Faturado']);
-    const flagTestDrive = getValue(row, ['Flag_TestDrive']);
-    const isFaturado = flagFaturado === 1 || flagFaturado === '1';
-    const hasTestDrive = flagTestDrive === 1 || flagTestDrive === '1';
+    const flagFaturado = getValue(row, FLAG_FATURADO_KEYS);
+    const flagTestDrive = getValue(row, FLAG_TESTDRIVE_KEYS);
+    const isFaturado = flagFaturado === 1 || flagFaturado === '1' || flagFaturado === true;
+    const hasTestDrive = flagTestDrive === 1 || flagTestDrive === '1' || flagTestDrive === true;
     return isFaturado && !hasTestDrive;
   }).length;
 
@@ -438,9 +435,21 @@ function calculateFilteredMetrics(
 }
 
 export function applyFilters(originalData: ProcessedData, filters: FilterOptions): ProcessedData {
-  // Se não há filtros aplicados, retorna os dados originais
+  // Se não há filtros aplicados, enriquecer Sheet2/Sheet3 com dealer via correlação por ID e retornar
   if (filters.selectedDealers.length === 0 && !filters.dateRange.start && !filters.dateRange.end) {
-    return originalData;
+    const sheet1 = originalData.rawData.sheet1Data;
+    const enrichedSheet2 = enrichSheetWithDealerInfo(originalData.rawData.sheet2Data, sheet1);
+    const enrichedSheet3 = enrichSheetWithDealerInfo(originalData.rawData.sheet3Data, sheet1);
+    return {
+      ...originalData,
+      rawData: {
+        sheet1Data: originalData.rawData.sheet1Data,
+        sheet2Data: enrichedSheet2,
+        sheet3Data: enrichedSheet3,
+        sheet4Data: originalData.rawData.sheet4Data,
+        sheet5Data: originalData.rawData.sheet5Data || []
+      }
+    };
   }
 
   // Filtrar cada aba (Sheet2 e Sheet3 podem precisar de correlação com Sheet1)

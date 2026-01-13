@@ -1,5 +1,5 @@
 import { Users, Car, DollarSign, Target, TrendingUp, Store, ShoppingBag } from 'lucide-react';
-import { FunnelMetrics } from '@/utils/excelProcessor';
+import { FunnelMetrics } from '@/utils/types';
 
 interface MultipleFunnelsProps {
   data: FunnelMetrics;

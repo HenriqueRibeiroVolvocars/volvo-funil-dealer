@@ -1,5 +1,8 @@
-import { ProcessedData, FunnelMetrics } from './excelProcessor';
+import { ProcessedData, FunnelMetrics } from './types';
 import { FilterOptions, applyFilters } from './dataFilters';
+
+const FLAG_TESTDRIVE_KEYS = ['Flag_TestDrive', 'flag_testdrive', 'flag_test_drive', 'FlagTestDrive', 'flagTestDrive'];
+const FLAG_FATURADO_KEYS = ['Flag_Faturado', 'flag_faturado', 'faturado', 'Faturado', 'flagFaturado', 'FlagFaturado'];
 
 export interface DealerMetrics {
   dealerName: string;
@@ -45,8 +48,8 @@ function normalizeDealerName(dealerName: string): string {
 function getDealerFromRow(row: any): string | null {
   if (!row) return null;
 
-  // Todas as fontes usam 'dealer'
-  const dealer = getValue(row, ['dealer', 'Dealer']);
+  // Aceitar várias chaves usadas em diferentes sheets/arquivos
+  const dealer = getValue(row, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária', 'nome_concessionaria', 'nome_concessionária', 'Nome_Concessionaria', 'Nome_Concessionária', 'NomeDealer', 'nomeDealer']);
   return dealer ? String(dealer).trim() : null;
 }
 
@@ -116,14 +119,14 @@ export function calculateDealerComparison(
       dealerData.leads++;
       
       // Verificar se lead teve test drive
-      const flagTestDrive = getValue(row, ['Flag_TestDrive']);
-      if (flagTestDrive === 1 || flagTestDrive === '1') {
+      const flagTestDrive = getValue(row, FLAG_TESTDRIVE_KEYS);
+      if (flagTestDrive === 1 || flagTestDrive === '1' || flagTestDrive === true) {
         dealerData.leadsWithTestDrive++;
       }
       
       // Verificar se lead foi faturado (somar somente se não houver Sheet4)
-      const flagFaturado = getValue(row, ['Flag_Faturado']);
-      if (!useSheet4 && (flagFaturado === 1 || flagFaturado === '1')) {
+      const flagFaturado = getValue(row, FLAG_FATURADO_KEYS);
+      if (!useSheet4 && (flagFaturado === 1 || flagFaturado === '1' || flagFaturado === true)) {
         dealerData.sales++;
       }
     }
@@ -137,8 +140,8 @@ export function calculateDealerComparison(
       dealerData.testDrives++;
       
       // Verificar se test drive foi faturado
-      const flagFaturado = getValue(row, ['Flag_Faturado']);
-      if (flagFaturado === 1 || flagFaturado === '1') {
+      const flagFaturado = getValue(row, FLAG_FATURADO_KEYS);
+      if (flagFaturado === 1 || flagFaturado === '1' || flagFaturado === true) {
         dealerData.testDrivesFaturados++;
       }
     }
@@ -164,6 +167,16 @@ export function calculateDealerComparison(
       if (visitasValue && !isNaN(Number(visitasValue))) {
         dealerData.storeVisits += Number(visitasValue);
       }
+    }
+  });
+
+  console.log('🗂️ dealerDataMap size after processing sheets:', dealerDataMap.size);
+  // Logar até 5 entradas para debug
+  let sample = 0;
+  dealerDataMap.forEach((v, k) => {
+    if (sample < 5) {
+      console.log('  dealer sample:', k, v);
+      sample++;
     }
   });
   

@@ -1,5 +1,6 @@
 import { TrendingUp, Clock, Calendar, Target, Percent, Zap, BarChart3 } from 'lucide-react';
-import { formatBrazilianNumber, formatBrazilianPercent, FunnelMetrics } from '@/utils/excelProcessor';
+import { formatBrazilianNumber, formatBrazilianPercent } from '@/utils/excelProcessor';
+import { FunnelMetrics } from '@/utils/types';
 import { cn } from '@/lib/utils';
 
 interface KpiData {
