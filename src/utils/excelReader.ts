@@ -74,9 +74,27 @@ export async function processApiAndExcel(
   try {
     const apiCache: Record<string, any> = {};
 
+    // Get URLs from environment variables (Vite requires VITE_ prefix)
+    const sheet1Url = import.meta.env.VITE_SHEET1_URL;
+    const sheet2Url = import.meta.env.VITE_SHEET2_URL;
+    const sheet3Url = import.meta.env.VITE_SHEET3_URL;
+    const sheet4Url = import.meta.env.VITE_SHEET4_URL;
+
+    if (!sheet1Url || !sheet2Url || !sheet3Url || !sheet4Url) {
+      throw new Error('Variáveis de ambiente das APIs não configuradas. Verifique VITE_SHEET1_URL, VITE_SHEET2_URL, VITE_SHEET3_URL, VITE_SHEET4_URL no arquivo .env');
+    }
+
     const cachedFetch = async (key: string, url: string) => {
       if (apiCache[key]) return apiCache[key];
-      const res = await fetch(url);
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!res.ok) {
+        throw new Error(`Erro ao buscar ${key}: ${res.status} ${res.statusText}`);
+      }
       const data = await res.json().catch(() => null);
       apiCache[key] = data;
       return data;
@@ -85,10 +103,10 @@ export async function processApiAndExcel(
     options?.onStatusChange?.('carregando');
 
     const [sheet1Raw, sheet2Raw, sheet3Raw, sheet4Raw] = await Promise.all([
-      cachedFetch('sheet1', '/api/sheet1'),
-      cachedFetch('sheet2', '/api/sheet2'),
-      cachedFetch('sheet3', '/api/sheet3'),
-      cachedFetch('sheet4', '/api/sheet4')
+      cachedFetch('sheet1', sheet1Url),
+      cachedFetch('sheet2', sheet2Url),
+      cachedFetch('sheet3', sheet3Url),
+      cachedFetch('sheet4', sheet4Url)
     ]);
 
     const extractArray = (raw: any): any[] => {

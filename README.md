@@ -60,6 +60,34 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Configuração do Ambiente
+
+### Variáveis de Ambiente
+
+Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
+
+```env
+# URLs das APIs do Logic App
+# IMPORTANTE: No Vite, todas as variáveis devem ter o prefixo VITE_ para serem acessíveis no frontend
+
+VITE_SHEET1_URL=https://your-logic-app-url-1.azurewebsites.net/api/sheet1
+VITE_SHEET2_URL=https://your-logic-app-url-2.azurewebsites.net/api/sheet2
+VITE_SHEET3_URL=https://your-logic-app-url-3.azurewebsites.net/api/sheet3
+VITE_SHEET4_URL=https://your-logic-app-url-4.azurewebsites.net/api/sheet4
+```
+
+Substitua as URLs acima pelas URLs reais das suas APIs do Logic App.
+
+### Autenticação
+
+A aplicação utiliza autenticação com Entra ID (Azure AD) através do Azure Static Web Apps. 
+
+- **Login**: `/.auth/login/aad`
+- **Logout**: `/.auth/logout`
+- **Verificação de usuário**: `/.auth/me`
+
+A autenticação é gerenciada automaticamente pelo Azure Static Web Apps. Os usuários precisam fazer login para acessar a aplicação, e as roles são retornadas pela API de roles do Azure Static Web Apps.
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/3beb4d3c-92b4-4dd0-97f9-a7a72e52d753) and click on Share -> Publish.

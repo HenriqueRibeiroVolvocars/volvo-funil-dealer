@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AlertCircle, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { exportToPDF } from '@/utils/pdfExporter';
+import { UserMenu } from '@/components/UserMenu';
 
 export default function Index() {
   const [originalData, setOriginalData] = useState<ProcessedData | null>(null);
@@ -161,6 +162,11 @@ export default function Index() {
             <p className="text-muted-foreground text-lg">
               Leads · Test-drives · Veículos faturados
             </p>
+          </div>
+          
+          {/* User Menu - Top Right */}
+          <div className="absolute top-4 right-4">
+            <UserMenu />
           </div>
           
           {/* Período e Export PDF no header (com botão Importar Visitas acima) */}
