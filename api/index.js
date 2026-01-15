@@ -1,6 +1,8 @@
 const express = require('express');
 const fetch = require('node-fetch');
-require('dotenv').config();
+require('dotenv').config({
+  path: require('path').resolve(__dirname, '.env')
+});
 const cors = require('cors');
 
 const app = express();
