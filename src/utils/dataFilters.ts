@@ -148,9 +148,9 @@ function filterSheetData(data: any[], filters: FilterOptions, sheet1Data?: any[]
   const filteredData = data.filter(row => {
     let rowToCheck = row;
     
-    // Se for Sheet2 ou Sheet3, pode precisar correlacionar com Sheet1 para pegar dealer e data
-    const needsCorrelation = !getValue(row, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']) 
-                          || !getValue(row, ['dateSales', 'DateSales', 'Data', 'data']);
+    // Se for Sheet2, Sheet3 OU Sheet4, pode precisar correlacionar com Sheet1 para pegar dealer e data
+    const needsCorrelation = !getValue(row, ['NomeDealer','Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']) 
+                || !getValue(row, ['dateSales', 'DateSales', 'Data', 'data']);
     
     if (sheet1Data && needsCorrelation) {
       const id = getValue(row, ['ID', 'id', 'Id']);
@@ -163,16 +163,12 @@ function filterSheetData(data: any[], filters: FilterOptions, sheet1Data?: any[]
         if (matchingSheet1Row) {
           const correlatedDealer = getValue(matchingSheet1Row, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
           const correlatedDate = getValue(matchingSheet1Row, ['dateSales', 'DateSales', 'Data', 'data']);
-          
+
           rowToCheck = {
             ...row,
             Dealer: correlatedDealer,
             dateSales: correlatedDate
           };
-          
-          console.log(`🔗 Correlação ${sheetName} - ID: ${id}, Dealer: ${correlatedDealer}, Date: ${correlatedDate}`);
-        } else {
-          console.log(`❌ ${sheetName} - ID ${id} não encontrado na Sheet1`);
         }
       }
     }
