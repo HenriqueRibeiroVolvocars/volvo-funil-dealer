@@ -177,33 +177,14 @@ function filterSheetData(data: any[], filters: FilterOptions, sheet1Data?: any[]
       }
     }
 
-    // Filtro de dealer
+    // Filtro de dealer (dados da API são 100% confiáveis)
     if (filters.selectedDealers.length > 0) {
-      let dealer: any = getValue(rowToCheck, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
-      // Removido fallback incorreto por índice — agora só aceita dealer explícito ou correlacionado via Sheet1
-      
-      const dealerStr = dealer ? String(dealer).trim() : '';
+      const dealer: any = getValue(rowToCheck, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
+      const normalizedRowDealer = normalizeDealerName(String(dealer));
+      const normalizedSelectedDealers = filters.selectedDealers.map(d => normalizeDealerName(d));
 
-      // ✅ Se não há dealer identificado, NÃO descartar a linha
-      // (selecionar todas nunca pode ser mais restritivo que não filtrar)
-      if (dealerStr !== '') {
-        // DESCARTAR apenas valores claramente inválidos
-        if (
-          dealerStr.includes('@') ||               // evita e-mail
-          /\d{3,}/.test(dealerStr) ||              // evita telefones/CPFs
-          dealerStr.length < 3                     // evita valores curtos
-        ) {
-          console.log(`🚫 ${sheetName} - Dealer inválido descartado: ${dealerStr}`);
-          return false;
-        }
-
-        const normalizedRowDealer = normalizeDealerName(dealerStr);
-        const normalizedSelectedDealers = filters.selectedDealers.map(d => normalizeDealerName(d));
-
-        if (!normalizedSelectedDealers.includes(normalizedRowDealer)) {
-          console.log(`🚫 ${sheetName} - Dealer rejeitado após normalização: ${dealerStr}`);
-          return false;
-        }
+      if (!normalizedSelectedDealers.includes(normalizedRowDealer)) {
+        return false;
       }
     }
 
