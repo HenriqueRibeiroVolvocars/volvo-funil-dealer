@@ -127,7 +127,7 @@ export function enrichSheetWithDealerInfo(sheetData: any[], sheet1Data: any[]): 
     if (id) {
       const sheet1Row = sheet1Map.get(String(id).trim());
       if (sheet1Row) {
-        const dealer = getValue(sheet1Row, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
+        const dealer = getValue(sheet1Row, ['NomeDealer', 'Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
         const dateSales = getValue(sheet1Row, ['dateSales', 'DateSales', 'Data', 'data']);
         return { ...row, Dealer: dealer, dateSales };
       }
@@ -161,7 +161,7 @@ function filterSheetData(data: any[], filters: FilterOptions, sheet1Data?: any[]
         });
         
         if (matchingSheet1Row) {
-          const correlatedDealer = getValue(matchingSheet1Row, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
+          const correlatedDealer = getValue(matchingSheet1Row, ['NomeDealer', 'Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
           const correlatedDate = getValue(matchingSheet1Row, ['dateSales', 'DateSales', 'Data', 'data']);
 
           rowToCheck = {
@@ -175,7 +175,7 @@ function filterSheetData(data: any[], filters: FilterOptions, sheet1Data?: any[]
 
     // Filtro de dealer (dados da API são 100% confiáveis)
     if (filters.selectedDealers.length > 0) {
-      const dealer: any = getValue(rowToCheck, ['Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
+      const dealer: any = getValue(rowToCheck, ['NomeDealer', 'Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
       const normalizedRowDealer = normalizeDealerName(String(dealer));
       const normalizedSelectedDealers = filters.selectedDealers.map(d => normalizeDealerName(d));
 
