@@ -237,6 +237,7 @@ function calculateFilteredMetrics(
   filteredSheet4: any[],
   filteredSheet5: any[],
   filteredSheet6: any[],
+  filteredSheet7: any[],
   filters: FilterOptions
 ): Omit<ProcessedData, 'period' | 'rawData' | 'dealers'> {
   // Contadores básicos
@@ -419,6 +420,27 @@ function calculateFilteredMetrics(
     percAntigos = antigosValues.length > 0 ? antigosValues.reduce((s, v) => s + v, 0) / antigosValues.length : 0;
   }
 
+  // Calcular OSAT para Car Handover - New Car e Test Drive
+  let osatCarHandover = 0;
+  let osatTestDrive = 0;
+  if (filteredSheet7 && filteredSheet7.length > 0) {
+    const carHandoverValues: number[] = [];
+    const testDriveValues: number[] = [];
+    filteredSheet7.forEach(row => {
+      const surveyEvent = getValue(row, ['SURVEY_EVENT_NAME', 'survey_event_name']);
+      const satisfaction = getValue(row, ['media_overall_satisfaction', 'mediaOverallSatisfaction']);
+      if (satisfaction !== null && satisfaction !== undefined && !isNaN(Number(satisfaction))) {
+        if (surveyEvent === 'Car Handover - New Car') {
+          carHandoverValues.push(Number(satisfaction));
+        } else if (surveyEvent === 'Test Drive') {
+          testDriveValues.push(Number(satisfaction));
+        }
+      }
+    });
+    osatCarHandover = carHandoverValues.length > 0 ? carHandoverValues.reduce((s, v) => s + v, 0) / carHandoverValues.length : 0;
+    osatTestDrive = testDriveValues.length > 0 ? testDriveValues.reduce((s, v) => s + v, 0) / testDriveValues.length : 0;
+  }
+
   return {
     avgLeadToTestDrive,
     avgTestDriveToFaturamento,
@@ -433,7 +455,9 @@ function calculateFilteredMetrics(
     leadsFaturadosCount: totalLeadsFaturados,
     funnelMetrics,
     percNovos,
-    percAntigos
+    percAntigos,
+    osatCarHandover,
+    osatTestDrive
   };
 }
 
@@ -451,7 +475,8 @@ export function applyFilters(originalData: ProcessedData, filters: FilterOptions
         sheet3Data: enrichedSheet3,
         sheet4Data: originalData.rawData.sheet4Data,
         sheet5Data: originalData.rawData.sheet5Data || [],
-        sheet6Data: originalData.rawData.sheet6Data || []
+        sheet6Data: originalData.rawData.sheet6Data || [],
+        sheet7Data: originalData.rawData.sheet7Data || []
       }
     };
   }
@@ -463,9 +488,10 @@ export function applyFilters(originalData: ProcessedData, filters: FilterOptions
   const filteredSheet4 = filterSheetData(originalData.rawData.sheet4Data, filters, undefined, 'Sheet4');
   const filteredSheet5 = filterSheetData(originalData.rawData.sheet5Data || [], filters, undefined, 'Sheet5');
   const filteredSheet6 = filterSheetData(originalData.rawData.sheet6Data || [], filters, undefined, 'Sheet6');
+  const filteredSheet7 = filterSheetData(originalData.rawData.sheet7Data || [], filters, undefined, 'Sheet7');
 
   // Recalcular métricas
-  const newMetrics = calculateFilteredMetrics(filteredSheet1, filteredSheet2, filteredSheet3, filteredSheet4, filteredSheet5, filteredSheet6, filters);
+  const newMetrics = calculateFilteredMetrics(filteredSheet1, filteredSheet2, filteredSheet3, filteredSheet4, filteredSheet5, filteredSheet6, filteredSheet7, filters);
 
   // Calcular novo período baseado nos dados filtrados
   const allFilteredDates: Date[] = [];
@@ -519,7 +545,8 @@ export function applyFilters(originalData: ProcessedData, filters: FilterOptions
       sheet3Data: filteredSheet3,
       sheet4Data: filteredSheet4,
       sheet5Data: filteredSheet5,
-      sheet6Data: filteredSheet6
+      sheet6Data: filteredSheet6,
+      sheet7Data: filteredSheet7
     },
     dealers: originalData.dealers // Manter lista original de dealers
   };

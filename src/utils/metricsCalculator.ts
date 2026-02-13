@@ -7,7 +7,8 @@ export function calculateMetrics(
   sheet3Data: any[],
   sheet4Data: any[] = [],
   sheet5Data: any[] = [],
-  sheet6Data: any[] = []
+  sheet6Data: any[] = [],
+  sheet7Data: any[] = []
 ): any {
   const totalLeads = sheet1Data.length;
   const totalTestDrives = sheet2Data.length;
@@ -137,6 +138,27 @@ export function calculateMetrics(
     percAntigos = antigosValues.length > 0 ? antigosValues.reduce((s, v) => s + v, 0) / antigosValues.length : 0;
   }
 
+  // Calcular OSAT para Car Handover - New Car e Test Drive
+  let osatCarHandover = 0;
+  let osatTestDrive = 0;
+  if (sheet7Data && sheet7Data.length > 0) {
+    const carHandoverValues: number[] = [];
+    const testDriveValues: number[] = [];
+    sheet7Data.forEach(row => {
+      const surveyEvent = getValue(row, ['SURVEY_EVENT_NAME', 'survey_event_name']);
+      const satisfaction = getValue(row, ['media_overall_satisfaction', 'mediaOverallSatisfaction']);
+      if (satisfaction !== null && satisfaction !== undefined && !isNaN(Number(satisfaction))) {
+        if (surveyEvent === 'Car Handover - New Car') {
+          carHandoverValues.push(Number(satisfaction));
+        } else if (surveyEvent === 'Test Drive') {
+          testDriveValues.push(Number(satisfaction));
+        }
+      }
+    });
+    osatCarHandover = carHandoverValues.length > 0 ? carHandoverValues.reduce((s, v) => s + v, 0) / carHandoverValues.length : 0;
+    osatTestDrive = testDriveValues.length > 0 ? testDriveValues.reduce((s, v) => s + v, 0) / testDriveValues.length : 0;
+  }
+
   return {
     avgLeadToTestDrive,
     avgTestDriveToFaturamento,
@@ -151,6 +173,8 @@ export function calculateMetrics(
     leadsFaturadosCount: totalLeadsFaturados,
     funnelMetrics,
     percNovos,
-    percAntigos
+    percAntigos,
+    osatCarHandover,
+    osatTestDrive
   };
 }

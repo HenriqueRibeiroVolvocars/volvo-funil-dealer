@@ -16,6 +16,7 @@ export interface ProcessedData {
     sheet4Data: any[];
     sheet5Data: any[];
     sheet6Data: any[];
+    sheet7Data: any[];
   };
   dealers: string[];
   // Métricas calculadas (retornadas por processExcelFile / applyFilters)
@@ -34,4 +35,7 @@ export interface ProcessedData {
   // Novas métricas para clientes novos e antigos
   percNovos?: number;
   percAntigos?: number;
+  // Métricas OSAT
+  osatCarHandover?: number;
+  osatTestDrive?: number;
 }

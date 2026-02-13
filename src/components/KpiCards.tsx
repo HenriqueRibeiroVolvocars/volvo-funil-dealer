@@ -1,4 +1,4 @@
-import { TrendingUp, Clock, Calendar, Target, Percent, Zap, BarChart3, UserPlus, UserMinus } from 'lucide-react';
+import { TrendingUp, Clock, Calendar, Target, Percent, Zap, BarChart3, UserPlus, UserMinus, Star, Car } from 'lucide-react';
 import { formatBrazilianNumber, formatBrazilianPercent } from '@/utils/excelProcessor';
 import { FunnelMetrics } from '@/utils/types';
 import { cn } from '@/lib/utils';
@@ -17,6 +17,8 @@ interface KpiData {
   funnelMetrics: FunnelMetrics; // Para calcular taxas de conversão
   percNovos: number;
   percAntigos: number;
+  osatCarHandover: number;
+  osatTestDrive: number;
 }
 
 interface KpiCardsProps {
@@ -62,6 +64,18 @@ export default function KpiCards({ data, originalData, hasFiltersApplied = false
       icon: UserMinus,
       value: formatBrazilianPercent(data.percAntigos),
       subtitle: 'Percentual de clientes antigos'
+    },
+    {
+      title: 'OSAT Car Handover',
+      icon: Car,
+      value: formatBrazilianNumber(data.osatCarHandover),
+      subtitle: 'Satisfação média entrega carro novo'
+    },
+    {
+      title: 'OSAT Test Drive',
+      icon: Star,
+      value: formatBrazilianNumber(data.osatTestDrive),
+      subtitle: 'Satisfação média test drive'
     }
   ];
 
@@ -93,6 +107,8 @@ export default function KpiCards({ data, originalData, hasFiltersApplied = false
                       {index === 3 && formatBrazilianPercent(originalData.decidedLeadsPercentage)}
                       {index === 4 && formatBrazilianPercent(originalData.percNovos)}
                       {index === 5 && formatBrazilianPercent(originalData.percAntigos)}
+                      {index === 6 && formatBrazilianNumber(originalData.osatCarHandover)}
+                      {index === 7 && formatBrazilianNumber(originalData.osatTestDrive)}
                     </div>
                   </div>
                 )}

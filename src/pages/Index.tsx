@@ -278,7 +278,9 @@ export default function Index() {
                     leadsFaturadosCount: data.leadsFaturadosCount,
                     funnelMetrics: data.funnelMetrics,
                     percNovos: data.percNovos,
-                    percAntigos: data.percAntigos
+                    percAntigos: data.percAntigos,
+                    osatCarHandover: data.osatCarHandover,
+                    osatTestDrive: data.osatTestDrive
                   }}
                   originalData={brDataForPeriod ? {
                     avgLeadToTestDrive: brDataForPeriod.avgLeadToTestDrive,
@@ -293,7 +295,9 @@ export default function Index() {
                     leadsFaturadosCount: brDataForPeriod.leadsFaturadosCount,
                     funnelMetrics: brDataForPeriod.funnelMetrics,
                     percNovos: brDataForPeriod.percNovos,
-                    percAntigos: brDataForPeriod.percAntigos
+                    percAntigos: brDataForPeriod.percAntigos,
+                    osatCarHandover: brDataForPeriod.osatCarHandover,
+                    osatTestDrive: brDataForPeriod.osatTestDrive
                   } : undefined}
                   hasFiltersApplied={filters.selectedDealers.length > 0}
                 />
