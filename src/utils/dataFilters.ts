@@ -149,7 +149,7 @@ function filterSheetData(data: any[], filters: FilterOptions, sheet1Data?: any[]
     let rowToCheck = row;
     
     // Se for Sheet2, Sheet3 OU Sheet4, pode precisar correlacionar com Sheet1 para pegar dealer e data
-    const needsCorrelation = !getValue(row, ['NomeDealer','Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']) 
+    const needsCorrelation = !getValue(row, ['NomeDealer','Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária', 'nome_concessionária']) 
                 || !getValue(row, ['dateSales', 'DateSales', 'Data', 'data']);
     
     if (sheet1Data && needsCorrelation) {
@@ -175,7 +175,7 @@ function filterSheetData(data: any[], filters: FilterOptions, sheet1Data?: any[]
 
     // Filtro de dealer (dados da API são 100% confiáveis)
     if (filters.selectedDealers.length > 0) {
-      const dealer: any = getValue(rowToCheck, ['NomeDealer', 'Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária']);
+      const dealer: any = getValue(rowToCheck, ['NomeDealer', 'Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária', 'nome_concessionária']);
       const normalizedRowDealer = normalizeDealerName(String(dealer));
       const normalizedSelectedDealers = filters.selectedDealers.map(d => normalizeDealerName(d));
 
@@ -186,39 +186,44 @@ function filterSheetData(data: any[], filters: FilterOptions, sheet1Data?: any[]
 
     // Filtro de data
     if (filters.dateRange.start || filters.dateRange.end) {
-      // Prioriza chaves padrão
-      let dateValue = getValue(rowToCheck, ['dateSales', 'DateSales', 'Data', 'data']);
+      // Para sheets que não têm data (sheet6 e sheet7), pular filtro de data
+      if (sheetName === 'Sheet6' || sheetName === 'Sheet7') {
+        // Não aplicar filtro de data para essas sheets
+      } else {
+        // Prioriza chaves padrão
+        let dateValue = getValue(rowToCheck, ['dateSales', 'DateSales', 'Data', 'data']);
 
-      // Fallbacks por planilha
-      if (!dateValue && sheetName === 'Sheet2') {
-        const keys = Object.keys(rowToCheck);
-        if (keys[4]) dateValue = rowToCheck[keys[4]]; // Coluna E
-      }
+        // Fallbacks por planilha
+        if (!dateValue && sheetName === 'Sheet2') {
+          const keys = Object.keys(rowToCheck);
+          if (keys[4]) dateValue = rowToCheck[keys[4]]; // Coluna E
+        }
 
-      if (!dateValue && sheetName === 'Sheet4') {
-        const keys = Object.keys(rowToCheck);
-        if (keys[3]) dateValue = rowToCheck[keys[3]]; // Coluna D
-      }
+        if (!dateValue && sheetName === 'Sheet4') {
+          const keys = Object.keys(rowToCheck);
+          if (keys[3]) dateValue = rowToCheck[keys[3]]; // Coluna D
+        }
 
-      if (!dateValue && sheetName === 'Sheet5') {
-        const keys = Object.keys(rowToCheck);
-        if (keys[1]) dateValue = rowToCheck[keys[1]]; // Coluna B (data)
-      }
+        if (!dateValue && sheetName === 'Sheet5') {
+          const keys = Object.keys(rowToCheck);
+          if (keys[1]) dateValue = rowToCheck[keys[1]]; // Coluna B (data)
+        }
 
-      const date = parseFlexibleDate(dateValue);
+        const date = parseFlexibleDate(dateValue);
 
-      if (!date) {
-        console.log(`🚫 ${sheetName} - Linha rejeitada: data inválida ou ausente (${dateValue}) com filtro ativo`);
-        return false;
-      }
+        if (!date) {
+          console.log(`🚫 ${sheetName} - Linha rejeitada: data inválida ou ausente (${dateValue}) com filtro ativo`);
+          return false;
+        }
 
-      if (filters.dateRange.start && date < filters.dateRange.start) {
-        console.log(`🚫 ${sheetName} - Linha rejeitada por data inicial: ${date} < ${filters.dateRange.start}`);
-        return false;
-      }
-      if (filters.dateRange.end && date > filters.dateRange.end) {
-        console.log(`🚫 ${sheetName} - Linha rejeitada por data final: ${date} > ${filters.dateRange.end}`);
-        return false;
+        if (filters.dateRange.start && date < filters.dateRange.start) {
+          console.log(`🚫 ${sheetName} - Linha rejeitada por data inicial: ${date} < ${filters.dateRange.start}`);
+          return false;
+        }
+        if (filters.dateRange.end && date > filters.dateRange.end) {
+          console.log(`🚫 ${sheetName} - Linha rejeitada por data final: ${date} > ${filters.dateRange.end}`);
+          return false;
+        }
       }
     }
 
