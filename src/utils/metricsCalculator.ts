@@ -142,21 +142,33 @@ export function calculateMetrics(
   let osatCarHandover = 0;
   let osatTestDrive = 0;
   if (sheet7Data && sheet7Data.length > 0) {
-    const carHandoverValues: number[] = [];
-    const testDriveValues: number[] = [];
+    let totalWeightedCarHandover = 0;
+    let totalResponsesCarHandover = 0;
+    let totalWeightedTestDrive = 0;
+    let totalResponsesTestDrive = 0;
+    
     sheet7Data.forEach(row => {
       const surveyEvent = getValue(row, ['SURVEY_EVENT_NAME', 'survey_event_name']);
       const satisfaction = getValue(row, ['media_overall_satisfaction', 'mediaOverallSatisfaction']);
-      if (satisfaction !== null && satisfaction !== undefined && !isNaN(Number(satisfaction))) {
+      const qtdRespostas = getValue(row, ['qtd_respostas', 'qtdRespostas']);
+      
+      if (satisfaction !== null && satisfaction !== undefined && !isNaN(Number(satisfaction)) &&
+          qtdRespostas !== null && qtdRespostas !== undefined && !isNaN(Number(qtdRespostas))) {
+        const sat = Number(satisfaction);
+        const qtd = Number(qtdRespostas);
+        
         if (surveyEvent === 'Car Handover - New Car') {
-          carHandoverValues.push(Number(satisfaction));
+          totalWeightedCarHandover += sat * qtd;
+          totalResponsesCarHandover += qtd;
         } else if (surveyEvent === 'Test Drive') {
-          testDriveValues.push(Number(satisfaction));
+          totalWeightedTestDrive += sat * qtd;
+          totalResponsesTestDrive += qtd;
         }
       }
     });
-    osatCarHandover = carHandoverValues.length > 0 ? carHandoverValues.reduce((s, v) => s + v, 0) / carHandoverValues.length : 0;
-    osatTestDrive = testDriveValues.length > 0 ? testDriveValues.reduce((s, v) => s + v, 0) / testDriveValues.length : 0;
+    
+    osatCarHandover = totalResponsesCarHandover > 0 ? totalWeightedCarHandover / totalResponsesCarHandover : 0;
+    osatTestDrive = totalResponsesTestDrive > 0 ? totalWeightedTestDrive / totalResponsesTestDrive : 0;
   }
 
   return {

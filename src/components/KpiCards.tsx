@@ -68,13 +68,13 @@ export default function KpiCards({ data, originalData, hasFiltersApplied = false
     {
       title: 'OSAT Car Handover',
       icon: Car,
-      value: formatBrazilianNumber(data.osatCarHandover),
+      value: data.osatCarHandover.toFixed(1).replace('.', ','),
       subtitle: 'Satisfação média entrega carro novo'
     },
     {
       title: 'OSAT Test Drive',
       icon: Star,
-      value: formatBrazilianNumber(data.osatTestDrive),
+      value: data.osatTestDrive.toFixed(1).replace('.', ','),
       subtitle: 'Satisfação média test drive'
     }
   ];
@@ -107,8 +107,8 @@ export default function KpiCards({ data, originalData, hasFiltersApplied = false
                       {index === 3 && formatBrazilianPercent(originalData.decidedLeadsPercentage)}
                       {index === 4 && formatBrazilianPercent(originalData.percNovos)}
                       {index === 5 && formatBrazilianPercent(originalData.percAntigos)}
-                      {index === 6 && formatBrazilianNumber(originalData.osatCarHandover)}
-                      {index === 7 && formatBrazilianNumber(originalData.osatTestDrive)}
+                      {index === 6 && originalData.osatCarHandover.toFixed(1).replace('.', ',')}
+                      {index === 7 && originalData.osatTestDrive.toFixed(1).replace('.', ',')}
                     </div>
                   </div>
                 )}
