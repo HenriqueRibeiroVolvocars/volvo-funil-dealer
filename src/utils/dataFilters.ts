@@ -236,6 +236,7 @@ function calculateFilteredMetrics(
   filteredSheet3: any[], 
   filteredSheet4: any[],
   filteredSheet5: any[],
+  filteredSheet6: any[],
   filters: FilterOptions
 ): Omit<ProcessedData, 'period' | 'rawData' | 'dealers'> {
   // Contadores básicos
@@ -398,6 +399,26 @@ function calculateFilteredMetrics(
 
   const decidedLeadsPercentage = totalLeadsFaturados > 0 ? (decidedLeadsCount / totalLeadsFaturados) * 100 : 0;
 
+  // Calcular percentuais de clientes novos e antigos
+  let percNovos = 0;
+  let percAntigos = 0;
+  if (filteredSheet6 && filteredSheet6.length > 0) {
+    const novosValues: number[] = [];
+    const antigosValues: number[] = [];
+    filteredSheet6.forEach(row => {
+      const percNovosVal = getValue(row, ['PercNovos', 'percNovos', 'percentualNovos']);
+      const percAntigosVal = getValue(row, ['PercAntigos', 'percAntigos', 'percentualAntigos']);
+      if (percNovosVal !== null && percNovosVal !== undefined && !isNaN(Number(percNovosVal))) {
+        novosValues.push(Number(percNovosVal));
+      }
+      if (percAntigosVal !== null && percAntigosVal !== undefined && !isNaN(Number(percAntigosVal))) {
+        antigosValues.push(Number(percAntigosVal));
+      }
+    });
+    percNovos = novosValues.length > 0 ? novosValues.reduce((s, v) => s + v, 0) / novosValues.length : 0;
+    percAntigos = antigosValues.length > 0 ? antigosValues.reduce((s, v) => s + v, 0) / antigosValues.length : 0;
+  }
+
   return {
     avgLeadToTestDrive,
     avgTestDriveToFaturamento,
@@ -410,7 +431,9 @@ function calculateFilteredMetrics(
     decidedLeadsCount,
     decidedLeadsPercentage,
     leadsFaturadosCount: totalLeadsFaturados,
-    funnelMetrics
+    funnelMetrics,
+    percNovos,
+    percAntigos
   };
 }
 
@@ -427,7 +450,8 @@ export function applyFilters(originalData: ProcessedData, filters: FilterOptions
         sheet2Data: enrichedSheet2,
         sheet3Data: enrichedSheet3,
         sheet4Data: originalData.rawData.sheet4Data,
-        sheet5Data: originalData.rawData.sheet5Data || []
+        sheet5Data: originalData.rawData.sheet5Data || [],
+        sheet6Data: originalData.rawData.sheet6Data || []
       }
     };
   }
@@ -438,9 +462,10 @@ export function applyFilters(originalData: ProcessedData, filters: FilterOptions
   const filteredSheet3 = filterSheetData(originalData.rawData.sheet3Data, filters, originalData.rawData.sheet1Data, 'Sheet3');
   const filteredSheet4 = filterSheetData(originalData.rawData.sheet4Data, filters, undefined, 'Sheet4');
   const filteredSheet5 = filterSheetData(originalData.rawData.sheet5Data || [], filters, undefined, 'Sheet5');
+  const filteredSheet6 = filterSheetData(originalData.rawData.sheet6Data || [], filters, undefined, 'Sheet6');
 
   // Recalcular métricas
-  const newMetrics = calculateFilteredMetrics(filteredSheet1, filteredSheet2, filteredSheet3, filteredSheet4, filteredSheet5, filters);
+  const newMetrics = calculateFilteredMetrics(filteredSheet1, filteredSheet2, filteredSheet3, filteredSheet4, filteredSheet5, filteredSheet6, filters);
 
   // Calcular novo período baseado nos dados filtrados
   const allFilteredDates: Date[] = [];
@@ -493,7 +518,8 @@ export function applyFilters(originalData: ProcessedData, filters: FilterOptions
       sheet2Data: filteredSheet2,
       sheet3Data: filteredSheet3,
       sheet4Data: filteredSheet4,
-      sheet5Data: filteredSheet5
+      sheet5Data: filteredSheet5,
+      sheet6Data: filteredSheet6
     },
     dealers: originalData.dealers // Manter lista original de dealers
   };

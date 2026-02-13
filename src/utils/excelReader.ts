@@ -32,12 +32,12 @@ export async function processExcelFile(file: File) {
         }
 
         const dealers = extractDealersFromSheets(sheet1Data, sheet2Data, sheet3Data, sheet4Data);
-        const metrics = calculateMetrics(sheet1Data, sheet2Data, sheet3Data, sheet4Data, sheet5Data);
+        const metrics = calculateMetrics(sheet1Data, sheet2Data, sheet3Data, sheet4Data, sheet5Data, []);
 
         resolve({
           ...metrics,
           period: { start: periodStart, end: periodEnd },
-          rawData: { sheet1Data, sheet2Data, sheet3Data, sheet4Data, sheet5Data },
+          rawData: { sheet1Data, sheet2Data, sheet3Data, sheet4Data, sheet5Data, sheet6Data: [] },
           dealers
         });
       } catch (err) {
@@ -79,9 +79,10 @@ export async function processApiAndExcel(
     const sheet2Url = import.meta.env.VITE_SHEET2_URL;
     const sheet3Url = import.meta.env.VITE_SHEET3_URL;
     const sheet4Url = import.meta.env.VITE_SHEET4_URL;
+    const sheet6Url = import.meta.env.VITE_SHEET6_URL;
 
-    if (!sheet1Url || !sheet2Url || !sheet3Url || !sheet4Url) {
-      throw new Error('Variáveis de ambiente das APIs não configuradas. Verifique VITE_SHEET1_URL, VITE_SHEET2_URL, VITE_SHEET3_URL, VITE_SHEET4_URL no arquivo .env');
+    if (!sheet1Url || !sheet2Url || !sheet3Url || !sheet4Url || !sheet6Url) {
+      throw new Error('Variáveis de ambiente das APIs não configuradas. Verifique VITE_SHEET1_URL, VITE_SHEET2_URL, VITE_SHEET3_URL, VITE_SHEET4_URL, VITE_SHEET6_URL no arquivo .env');
     }
 
     const cachedFetch = async (key: string, url: string) => {
@@ -102,11 +103,12 @@ export async function processApiAndExcel(
 
     options?.onStatusChange?.('carregando');
 
-    const [sheet1Raw, sheet2Raw, sheet3Raw, sheet4Raw] = await Promise.all([
+    const [sheet1Raw, sheet2Raw, sheet3Raw, sheet4Raw, sheet6Raw] = await Promise.all([
       cachedFetch('sheet1', sheet1Url),
       cachedFetch('sheet2', sheet2Url),
       cachedFetch('sheet3', sheet3Url),
-      cachedFetch('sheet4', sheet4Url)
+      cachedFetch('sheet4', sheet4Url),
+      cachedFetch('sheet6', sheet6Url)
     ]);
 
     const extractArray = (raw: any): any[] => {
@@ -122,6 +124,7 @@ export async function processApiAndExcel(
     const sheet2Data = extractArray(sheet2Raw);
     const sheet3Data = extractArray(sheet3Raw);
     const sheet4Data = extractArray(sheet4Raw);
+    const sheet6Data = extractArray(sheet6Raw);
 
     let sheet5Data: any[] = [];
     if (file) {
@@ -131,12 +134,12 @@ export async function processApiAndExcel(
     options?.onStatusChange?.('parcial');
 
     const dealers = extractDealersFromSheets(sheet1Data, sheet2Data, sheet3Data, sheet4Data);
-    const metrics = calculateMetrics(sheet1Data, sheet2Data, sheet3Data, sheet4Data, sheet5Data);
+    const metrics = calculateMetrics(sheet1Data, sheet2Data, sheet3Data, sheet4Data, sheet5Data, sheet6Data);
 
     const result = {
       ...metrics,
       period: { start: null, end: null },
-      rawData: { sheet1Data, sheet2Data, sheet3Data, sheet4Data, sheet5Data },
+      rawData: { sheet1Data, sheet2Data, sheet3Data, sheet4Data, sheet5Data, sheet6Data },
       dealers
     };
 

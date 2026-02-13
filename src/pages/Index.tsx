@@ -276,7 +276,9 @@ export default function Index() {
                     decidedLeadsCount: data.decidedLeadsCount,
                     decidedLeadsPercentage: data.decidedLeadsPercentage,
                     leadsFaturadosCount: data.leadsFaturadosCount,
-                    funnelMetrics: data.funnelMetrics
+                    funnelMetrics: data.funnelMetrics,
+                    percNovos: data.percNovos,
+                    percAntigos: data.percAntigos
                   }}
                   originalData={brDataForPeriod ? {
                     avgLeadToTestDrive: brDataForPeriod.avgLeadToTestDrive,
@@ -289,7 +291,9 @@ export default function Index() {
                     decidedLeadsCount: brDataForPeriod.decidedLeadsCount,
                     decidedLeadsPercentage: brDataForPeriod.decidedLeadsPercentage,
                     leadsFaturadosCount: brDataForPeriod.leadsFaturadosCount,
-                    funnelMetrics: brDataForPeriod.funnelMetrics
+                    funnelMetrics: brDataForPeriod.funnelMetrics,
+                    percNovos: brDataForPeriod.percNovos,
+                    percAntigos: brDataForPeriod.percAntigos
                   } : undefined}
                   hasFiltersApplied={filters.selectedDealers.length > 0}
                 />

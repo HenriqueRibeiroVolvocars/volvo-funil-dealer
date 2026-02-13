@@ -15,6 +15,7 @@ export interface ProcessedData {
     sheet3Data: any[];
     sheet4Data: any[];
     sheet5Data: any[];
+    sheet6Data: any[];
   };
   dealers: string[];
   // Métricas calculadas (retornadas por processExcelFile / applyFilters)
@@ -30,4 +31,7 @@ export interface ProcessedData {
   decidedLeadsPercentage?: number;
   leadsFaturadosCount?: number;
   funnelMetrics?: FunnelMetrics;
+  // Novas métricas para clientes novos e antigos
+  percNovos?: number;
+  percAntigos?: number;
 }

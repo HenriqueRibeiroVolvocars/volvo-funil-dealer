@@ -1,4 +1,4 @@
-import { TrendingUp, Clock, Calendar, Target, Percent, Zap, BarChart3 } from 'lucide-react';
+import { TrendingUp, Clock, Calendar, Target, Percent, Zap, BarChart3, UserPlus, UserMinus } from 'lucide-react';
 import { formatBrazilianNumber, formatBrazilianPercent } from '@/utils/excelProcessor';
 import { FunnelMetrics } from '@/utils/types';
 import { cn } from '@/lib/utils';
@@ -15,6 +15,8 @@ interface KpiData {
   decidedLeadsPercentage: number;
   leadsFaturadosCount: number; // Quantidade de leads faturados na base
   funnelMetrics: FunnelMetrics; // Para calcular taxas de conversão
+  percNovos: number;
+  percAntigos: number;
 }
 
 interface KpiCardsProps {
@@ -48,6 +50,18 @@ export default function KpiCards({ data, originalData, hasFiltersApplied = false
       icon: Zap,
       value: formatBrazilianPercent(data.decidedLeadsPercentage),
       subtitle: `${formatBrazilianNumber(data.decidedLeadsCount)} de ${formatBrazilianNumber(data.leadsFaturadosCount)} leads compraram em ≤10 dias`
+    },
+    {
+      title: 'Percentual Clientes Novos',
+      icon: UserPlus,
+      value: formatBrazilianPercent(data.percNovos),
+      subtitle: 'Percentual de clientes novos'
+    },
+    {
+      title: 'Percentual Clientes Antigos',
+      icon: UserMinus,
+      value: formatBrazilianPercent(data.percAntigos),
+      subtitle: 'Percentual de clientes antigos'
     }
   ];
 
@@ -77,6 +91,8 @@ export default function KpiCards({ data, originalData, hasFiltersApplied = false
                       {index === 1 && formatBrazilianNumber(originalData.avgTestDriveToFaturamento)}
                       {index === 2 && formatBrazilianNumber(originalData.avgTotalJourney)}
                       {index === 3 && formatBrazilianPercent(originalData.decidedLeadsPercentage)}
+                      {index === 4 && formatBrazilianPercent(originalData.percNovos)}
+                      {index === 5 && formatBrazilianPercent(originalData.percAntigos)}
                     </div>
                   </div>
                 )}

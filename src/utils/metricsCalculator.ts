@@ -6,7 +6,8 @@ export function calculateMetrics(
   sheet2Data: any[],
   sheet3Data: any[],
   sheet4Data: any[] = [],
-  sheet5Data: any[] = []
+  sheet5Data: any[] = [],
+  sheet6Data: any[] = []
 ): any {
   const totalLeads = sheet1Data.length;
   const totalTestDrives = sheet2Data.length;
@@ -116,6 +117,26 @@ export function calculateMetrics(
 
   const decidedLeadsPercentage = totalLeadsFaturados > 0 ? (decidedLeadsCount / totalLeadsFaturados) * 100 : 0;
 
+  // Calcular percentuais de clientes novos e antigos
+  let percNovos = 0;
+  let percAntigos = 0;
+  if (sheet6Data && sheet6Data.length > 0) {
+    const novosValues: number[] = [];
+    const antigosValues: number[] = [];
+    sheet6Data.forEach(row => {
+      const percNovosVal = getValue(row, ['PercNovos', 'percNovos', 'percentualNovos']);
+      const percAntigosVal = getValue(row, ['PercAntigos', 'percAntigos', 'percentualAntigos']);
+      if (percNovosVal !== null && percNovosVal !== undefined && !isNaN(Number(percNovosVal))) {
+        novosValues.push(Number(percNovosVal));
+      }
+      if (percAntigosVal !== null && percAntigosVal !== undefined && !isNaN(Number(percAntigosVal))) {
+        antigosValues.push(Number(percAntigosVal));
+      }
+    });
+    percNovos = novosValues.length > 0 ? novosValues.reduce((s, v) => s + v, 0) / novosValues.length : 0;
+    percAntigos = antigosValues.length > 0 ? antigosValues.reduce((s, v) => s + v, 0) / antigosValues.length : 0;
+  }
+
   return {
     avgLeadToTestDrive,
     avgTestDriveToFaturamento,
@@ -128,6 +149,8 @@ export function calculateMetrics(
     decidedLeadsCount,
     decidedLeadsPercentage,
     leadsFaturadosCount: totalLeadsFaturados,
-    funnelMetrics
+    funnelMetrics,
+    percNovos,
+    percAntigos
   };
 }
