@@ -149,7 +149,7 @@ function filterSheetData(data: any[], filters: FilterOptions, sheet1Data?: any[]
     let rowToCheck = row;
     
     // Se for Sheet2, Sheet3 OU Sheet4, pode precisar correlacionar com Sheet1 para pegar dealer e data
-    const needsCorrelation = !getValue(row, ['NomeDealer','Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária', 'nome_concessionária']) 
+    const needsCorrelation = !getValue(row, ['NomeDealer','Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária', 'nome_concessionaria', 'nome_concessionária']) 
                 || !getValue(row, ['dateSales', 'DateSales', 'Data', 'data']);
     
     if (sheet1Data && needsCorrelation) {
@@ -175,7 +175,7 @@ function filterSheetData(data: any[], filters: FilterOptions, sheet1Data?: any[]
 
     // Filtro de dealer (dados da API são 100% confiáveis)
     if (filters.selectedDealers.length > 0) {
-      const dealer: any = getValue(rowToCheck, ['NomeDealer', 'Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária', 'nome_concessionária']);
+      const dealer: any = getValue(rowToCheck, ['NomeDealer', 'Dealer', 'dealer', 'Concessionaria', 'concessionaria', 'Concessionária', 'concessionária', 'nome_concessionaria', 'nome_concessionária']);
       const normalizedRowDealer = normalizeDealerName(String(dealer));
       const normalizedSelectedDealers = filters.selectedDealers.map(d => normalizeDealerName(d));
 
